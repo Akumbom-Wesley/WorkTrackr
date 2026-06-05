@@ -248,7 +248,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               )
                             : const Icon(Icons.login, size: 18),
-                        label: const Text('Login', style: AppTextStyles.button),
+                        label: const Text(
+                          'Login',
+                          style: AppTextStyles.button,
+                        ),
                       ),
                     ),
                   ],

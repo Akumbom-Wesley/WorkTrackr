@@ -1,14 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/auth/login/login_screen.dart';
-import 'package:flutter/material.dart';
+import '../../features/employee/dashboard/employee_dashboard_screen.dart';
 
 class AppRoutes {
-  static const splash           = '/';
-  static const login            = '/login';
-  static const setPassword      = '/set-password';
+  static const splash            = '/';
+  static const login             = '/login';
+  static const setPassword       = '/set-password';
   static const employeeDashboard = '/employee/dashboard';
-  static const hrDashboard      = '/hr/dashboard';
+  static const hrDashboard       = '/hr/dashboard';
 }
 
 final appRouter = GoRouter(
@@ -38,7 +39,7 @@ final appRouter = GoRouter(
       name: 'employee-dashboard',
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
-        child: const Placeholder(), // replaced next step
+        child: const EmployeeDashboardScreen(),
         transitionsBuilder: (context, animation, secondary, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 400),
@@ -49,7 +50,9 @@ final appRouter = GoRouter(
       name: 'hr-dashboard',
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
-        child: const Placeholder(), // replaced later
+        child: const Scaffold(
+          body: Center(child: Text('HR Dashboard — Coming Soon')),
+        ),
         transitionsBuilder: (context, animation, secondary, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 400),
@@ -60,7 +63,9 @@ final appRouter = GoRouter(
       name: 'set-password',
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
-        child: const Placeholder(), // replaced later
+        child: const Scaffold(
+          body: Center(child: Text('Set Password — Coming Soon')),
+        ),
         transitionsBuilder: (context, animation, secondary, child) =>
             FadeTransition(opacity: animation, child: child),
         transitionDuration: const Duration(milliseconds: 400),
