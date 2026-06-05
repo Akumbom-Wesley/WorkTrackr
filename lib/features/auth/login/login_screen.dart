@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/router/app_router.dart';
+import '../auth_provider.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _employeeIdController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,15 +26,33 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onLogin() {
-    // TODO: wire to auth provider
-    setState(() => _isLoading = true);
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) setState(() => _isLoading = false);
-    });
+    final employeeId = _employeeIdController.text.trim();
+    final password = _passwordController.text.trim();
+    if (employeeId.isEmpty || password.isEmpty) return;
+    ref.read(authProvider.notifier).login(
+          erpNextEmployeeId: employeeId,
+          password: password,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (next.status == AuthStatus.authenticated) {
+        final role = next.user?.role;
+        if (role == 'HR_ADMIN') {
+          context.go(AppRoutes.hrDashboard);
+        } else {
+          context.go(AppRoutes.employeeDashboard);
+        }
+      }
+    });
+
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.status == AuthStatus.loading;
+    final errorMessage =
+        authState.status == AuthStatus.error ? authState.errorMessage : null;
+
     return Scaffold(
       backgroundColor: AppColors.surfaceContainerLow,
       body: SafeArea(
@@ -41,8 +62,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 48),
-
-              // Logo mark
               Container(
                 width: 80,
                 height: 80,
@@ -56,30 +75,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: AppColors.onPrimary,
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Wordmark
               Text(
                 'WorkTrackr',
                 style: AppTextStyles.headlineLgMobile.copyWith(
                   color: AppColors.onBackground,
                 ),
               ),
-
               const SizedBox(height: 4),
-
-              // Subtitle
               Text(
                 'Secure Employee Portal',
                 style: AppTextStyles.bodyMd.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
-
               const SizedBox(height: 32),
-
-              // Login card
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -98,24 +108,55 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Card header row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                      children: [
                         Text(
                           'System\nAccess',
                           style: AppTextStyles.headlineMd.copyWith(
                             color: AppColors.onBackground,
                           ),
                         ),
-                        _EncryptedChip(),
+                        const _EncryptedChip(),
                       ],
                     ),
-
                     const SizedBox(height: 24),
-
-                    // Employee ID field
+                    if (errorMessage != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorContainer,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: AppColors.error.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              size: 16,
+                              color: AppColors.onErrorContainer,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage,
+                                style: AppTextStyles.bodyMd.copyWith(
+                                  color: AppColors.onErrorContainer,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     Text(
                       'ERPNext Employee ID',
                       style: AppTextStyles.bodyMd.copyWith(
@@ -128,6 +169,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _employeeIdController,
                       keyboardType: TextInputType.text,
                       autocorrect: false,
+                      enabled: !isLoading,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: AppColors.onBackground,
                       ),
@@ -143,10 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // Password field
                     Text(
                       'Password',
                       style: AppTextStyles.bodyMd.copyWith(
@@ -158,6 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
+                      enabled: !isLoading,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: AppColors.onBackground,
                       ),
@@ -180,20 +220,17 @@ class _LoginScreenState extends State<LoginScreen> {
                             size: 20,
                           ),
                           onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
+                            () => _obscurePassword = !_obscurePassword,
                           ),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 28),
-
-                    // Login button
                     SizedBox(
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _onLogin,
+                        onPressed: isLoading ? null : _onLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryContainer,
                           foregroundColor: AppColors.onPrimary,
@@ -201,42 +238,32 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        icon: _isLoading
+                        icon: isLoading
                             ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.onPrimary,
-                          ),
-                        )
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.onPrimary,
+                                ),
+                              )
                             : const Icon(Icons.login, size: 18),
-                        label: Text(
-                          'Login',
-                          style: AppTextStyles.button,
-                        ),
+                        label: const Text('Login', style: AppTextStyles.button),
                       ),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 24),
-
-              // New Employee link
               Text(
                 'New Employee?',
                 style: AppTextStyles.bodyMd.copyWith(
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
-
               const SizedBox(height: 6),
-
               GestureDetector(
-                onTap: () {
-                  // TODO: navigate to set password screen
-                },
+                onTap: () => context.go(AppRoutes.setPassword),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -256,7 +283,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 32),
             ],
           ),
@@ -267,6 +293,8 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class _EncryptedChip extends StatelessWidget {
+  const _EncryptedChip();
+
   @override
   Widget build(BuildContext context) {
     return Container(
