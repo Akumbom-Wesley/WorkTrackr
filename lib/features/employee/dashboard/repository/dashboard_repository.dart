@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import '../../../../core/network/dio_client.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../model/dashboard_models.dart';
 
 class DashboardRepository {

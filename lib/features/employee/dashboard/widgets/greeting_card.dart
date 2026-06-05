@@ -330,7 +330,7 @@ class _ClockInButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label =
-        _isCheckedIn ? 'INITIALIZE CLOCK-OUT' : 'INITIALIZE CLOCK-IN';
+        _isCheckedIn ? 'CLOCK OUT' : 'CLOCK IN';
     final icon =
         _isCheckedIn ? Icons.logout_rounded : Icons.login_rounded;
 

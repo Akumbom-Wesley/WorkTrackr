@@ -35,7 +35,7 @@ class DashboardErrorView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Text(
+            const Text(
               'Could not load dashboard',
               style: AppTextStyles.headlineMd,
               textAlign: TextAlign.center,

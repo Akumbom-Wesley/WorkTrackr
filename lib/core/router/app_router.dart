@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/auth/login/login_screen.dart';
 import '../../features/employee/dashboard/employee_dashboard_screen.dart';
+import '../../features/employee/checkin/checkin_screen.dart';
 
 class AppRoutes {
   static const splash            = '/';
@@ -10,6 +11,7 @@ class AppRoutes {
   static const setPassword       = '/set-password';
   static const employeeDashboard = '/employee/dashboard';
   static const hrDashboard       = '/hr/dashboard';
+  static const checkin           = '/employee/checkin';
 }
 
 final appRouter = GoRouter(
@@ -68,6 +70,23 @@ final appRouter = GoRouter(
         ),
         transitionsBuilder: (context, animation, secondary, child) =>
             FadeTransition(opacity: animation, child: child),
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.checkin,
+      name: 'checkin',
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const CheckInScreen(),
+        transitionsBuilder: (context, animation, secondary, child) =>
+            SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
         transitionDuration: const Duration(milliseconds: 400),
       ),
     ),

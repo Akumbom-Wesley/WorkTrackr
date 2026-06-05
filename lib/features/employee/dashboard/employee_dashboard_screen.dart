@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/worktrackr_app_bar.dart';
-import '../../../shared/widgets/worktrackr_bottom_nav.dart';
 import '../../../shared/widgets/worktrackr_drawer.dart';
 import 'model/dashboard_models.dart';
 import 'providers/dashboard_providers.dart';
@@ -23,43 +25,155 @@ class EmployeeDashboardScreen extends ConsumerStatefulWidget {
 
 class _EmployeeDashboardScreenState
     extends ConsumerState<EmployeeDashboardScreen> {
-  int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late final PersistentTabController _navController;
+
+  @override
+  void initState() {
+    super.initState();
+    _navController = PersistentTabController(initialIndex: 0);
+  }
+
+  @override
+  void dispose() {
+    _navController.dispose();
+    super.dispose();
+  }
+
+  List<PersistentTabConfig> _tabs(DashboardData? data) => [
+    PersistentTabConfig(
+      screen: _DashboardTab(
+        scaffoldKey: _scaffoldKey,
+        data: data,
+        ref: ref,
+      ),
+      item: ItemConfig(
+        icon: const Icon(Icons.dashboard_rounded),
+        title: 'Dashboard',
+        activeForegroundColor: AppColors.secondary,
+        inactiveForegroundColor: AppColors.onSurfaceVariant,
+      ),
+    ),
+    PersistentTabConfig(
+      screen: const Scaffold(
+        body: Center(child: Text('History — Coming Soon')),
+      ),
+      item: ItemConfig(
+        icon: const Icon(Icons.history_rounded),
+        title: 'History',
+        activeForegroundColor: AppColors.secondary,
+        inactiveForegroundColor: AppColors.onSurfaceVariant,
+      ),
+    ),
+    PersistentTabConfig(
+      screen: const Scaffold(
+        body: Center(child: Text('Records — Coming Soon')),
+      ),
+      item: ItemConfig(
+        icon: const Icon(Icons.rule_rounded),
+        title: 'Records',
+        activeForegroundColor: AppColors.secondary,
+        inactiveForegroundColor: AppColors.onSurfaceVariant,
+      ),
+    ),
+    PersistentTabConfig(
+      screen: const Scaffold(
+        body: Center(child: Text('Profile — Coming Soon')),
+      ),
+      item: ItemConfig(
+        icon: const Icon(Icons.person_rounded),
+        title: 'Profile',
+        activeForegroundColor: AppColors.secondary,
+        inactiveForegroundColor: AppColors.onSurfaceVariant,
+      ),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
     final dashAsync = ref.watch(dashboardProvider);
+    final data = dashAsync.valueOrNull;
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: AppColors.background,
-
       appBar: WorkTrackrAppBar(scaffoldKey: _scaffoldKey),
-
-      drawer: dashAsync.whenOrNull(
-        data: (data) => WorkTrackrDrawer(
-          fullName: data.me.fullName.isNotEmpty
-              ? data.me.fullName
-              : data.me.username,
-          employeeId: data.me.erpnextEmployeeId,
-          onLogoutTap: () {
-            // TODO: call auth provider logout
-          },
+      drawer: data != null
+          ? WorkTrackrDrawer(
+        fullName: data.me.fullName.isNotEmpty
+            ? data.me.fullName
+            : data.me.username,
+        employeeId: data.me.erpnextEmployeeId,
+        onLogoutTap: () {},
+      )
+          : const WorkTrackrDrawer(),
+      body: PersistentTabView(
+        controller: _navController,
+        tabs: _tabs(data),
+        navBarBuilder: (navBarConfig) => Style1BottomNavBar(
+          navBarConfig: navBarConfig,
+          navBarDecoration: const NavBarDecoration(
+            color: AppColors.surfaceBase,
+          ),
         ),
-      ) ?? const WorkTrackrDrawer(),
-
-      body: dashAsync.when(
-        loading: () => const DashboardShimmer(),
-        error: (err, _) => DashboardErrorView(
-          message: _friendlyError(err),
-          onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
-        ),
-        data: (data) => _DashboardBody(data: data, ref: ref),
       ),
+    );
+  }
+}
 
-      bottomNavigationBar: WorkTrackrBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+// ── Dashboard tab body ────────────────────────────────────────────────────
+
+class _DashboardTab extends ConsumerWidget {
+  const _DashboardTab({
+    required this.scaffoldKey,
+    required this.data,
+    required this.ref,
+  });
+
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final DashboardData? data;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashAsync = ref.watch(dashboardProvider);
+
+    return dashAsync.when(
+      loading: () => const DashboardShimmer(),
+      error: (err, _) => DashboardErrorView(
+        message: _friendlyError(err),
+        onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
+      ),
+      data: (data) => RefreshIndicator(
+        color: AppColors.secondary,
+        backgroundColor: AppColors.surfaceBase,
+        onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  GreetingCard(
+                    me: data.me,
+                    status: data.employeeStatus,
+                    todaySummary: data.todaySummary,
+                    onStatusTap: () {},
+                    onClockInTap: () => context.push(AppRoutes.checkin),
+                  ),
+                  const SizedBox(height: 16),
+                  HoursSummaryGrid(
+                    summary: data.todaySummary,
+                    status: data.employeeStatus,
+                    onStatusTap: () {},
+                  ),
+                  const SizedBox(height: 16),
+                  const GeofenceCard(),
+                ]),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -75,50 +189,5 @@ class _EmployeeDashboardScreenState
       return 'Your session has expired. Please log in again.';
     }
     return 'Something went wrong. Please try again.';
-  }
-}
-
-// ── Dashboard body ────────────────────────────────────────────────────────
-
-class _DashboardBody extends StatelessWidget {
-  const _DashboardBody({required this.data, required this.ref});
-
-  final DashboardData data;
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      color: AppColors.secondary,
-      backgroundColor: AppColors.surfaceBase,
-      onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                GreetingCard(
-                  me: data.me,
-                  status: data.employeeStatus,
-                  todaySummary: data.todaySummary,
-                  onStatusTap: () {},
-                  onClockInTap: () {},
-                ),
-                const SizedBox(height: 16),
-                HoursSummaryGrid(
-                  summary: data.todaySummary,
-                  status: data.employeeStatus,
-                  onStatusTap: () {},
-                ),
-                const SizedBox(height: 16),
-                const GeofenceCard(),
-              ]),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -32,12 +32,12 @@ class HoursSummaryGrid extends StatelessWidget {
           value: _formatDuration(summary.hoursWorked),
           sub: 'Target: 8h',
         ),
-        _StatCard(
+        const _StatCard(
           label: 'WEEK TOTAL',
           value: '--',
           sub: 'Target: 40h',
         ),
-        _StatCard(
+        const _StatCard(
           label: 'OVERTIME',
           value: '--',
           sub: 'This Pay Period',
@@ -176,19 +176,19 @@ class _StatusCard extends StatelessWidget {
   _StatusConfig _configFor(String? status) {
     switch (status) {
       case 'present':
-        return _StatusConfig('Present', AppColors.securitySuccess);
+        return const _StatusConfig('Present', AppColors.securitySuccess);
       case 'break':
-        return _StatusConfig('On Break', AppColors.securityWarning);
+        return const _StatusConfig('On Break', AppColors.securityWarning);
       case 'errand':
-        return _StatusConfig('On Errand', AppColors.onTertiaryContainer);
+        return const _StatusConfig('On Errand', AppColors.onTertiaryContainer);
       case 'assignment':
-        return _StatusConfig('On Assignment', const Color(0xFF7C3AED));
+        return const _StatusConfig('On Assignment', Color(0xFF7C3AED));
       case 'checked_out':
-        return _StatusConfig('Checked Out', AppColors.outline);
+        return const _StatusConfig('Checked Out', AppColors.outline);
       case 'absent':
-        return _StatusConfig('Absent', AppColors.error);
+        return const _StatusConfig('Absent', AppColors.error);
       default:
-        return _StatusConfig('Off-Duty', AppColors.outline);
+        return const _StatusConfig('Off-Duty', AppColors.outline);
     }
   }
 }
