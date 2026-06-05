@@ -42,6 +42,7 @@ dependencies:
   # Code generation
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
+  curved_navigation_bar: ^1.0.6
 
 dev_dependencies:
   flutter_test:

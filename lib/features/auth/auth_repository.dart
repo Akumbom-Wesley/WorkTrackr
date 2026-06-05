@@ -5,7 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../shared/models/auth_model.dart';
 
 class AuthRepository {
-  final Dio _dio = DioClient.instance;
+  final Dio _dio = DioClient.instance.dio;
   final SecureStorage _storage = SecureStorage.instance;
 
   Future<AuthResponse> login({
