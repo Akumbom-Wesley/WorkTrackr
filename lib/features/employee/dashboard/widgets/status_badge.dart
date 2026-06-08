@@ -57,39 +57,39 @@ class StatusBadge extends StatelessWidget {
   _BadgeConfig _configFor(String? status) {
     switch (status) {
       case 'present':
-        return _BadgeConfig(
+        return const _BadgeConfig(
           label: 'Present',
           dot: AppColors.securitySuccess,
-          foreground: const Color(0xFF065F46),
-          background: const Color(0xFFD1FAE5),
-          border: const Color(0xFF6EE7B7),
+          foreground: Color(0xFF065F46),
+          background: Color(0xFFD1FAE5),
+          border: Color(0xFF6EE7B7),
         );
       case 'break':
-        return _BadgeConfig(
+        return const _BadgeConfig(
           label: 'On Break',
           dot: AppColors.securityWarning,
-          foreground: const Color(0xFF92400E),
-          background: const Color(0xFFFEF3C7),
-          border: const Color(0xFFFCD34D),
+          foreground: Color(0xFF92400E),
+          background: Color(0xFFFEF3C7),
+          border: Color(0xFFFCD34D),
         );
       case 'errand':
-        return _BadgeConfig(
+        return const _BadgeConfig(
           label: 'On Errand',
           dot: AppColors.onTertiaryContainer,
-          foreground: const Color(0xFF1E3A8A),
-          background: const Color(0xFFDBEAFE),
-          border: const Color(0xFF93C5FD),
+          foreground: Color(0xFF1E3A8A),
+          background: Color(0xFFDBEAFE),
+          border: Color(0xFF93C5FD),
         );
       case 'assignment':
-        return _BadgeConfig(
+        return const _BadgeConfig(
           label: 'On Assignment',
-          dot: const Color(0xFF7C3AED),
-          foreground: const Color(0xFF4C1D95),
-          background: const Color(0xFFEDE9FE),
-          border: const Color(0xFFC4B5FD),
+          dot: Color(0xFF7C3AED),
+          foreground: Color(0xFF4C1D95),
+          background: Color(0xFFEDE9FE),
+          border: Color(0xFFC4B5FD),
         );
       case 'checked_out':
-        return _BadgeConfig(
+        return const _BadgeConfig(
           label: 'Checked Out',
           dot: AppColors.outline,
           foreground: AppColors.onSurfaceVariant,
@@ -105,7 +105,7 @@ class StatusBadge extends StatelessWidget {
           border: AppColors.error.withValues(alpha: 0.4),
         );
       default:
-        return _BadgeConfig(
+        return const _BadgeConfig(
           label: 'No Status',
           dot: AppColors.outline,
           foreground: AppColors.onSurfaceVariant,

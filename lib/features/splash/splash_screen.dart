@@ -4,15 +4,17 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/router/app_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../auth/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
@@ -39,6 +41,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _setupAnimations();
     _startLoadingSequence();
+    // checkStoredSession called in navigation block
   }
 
   void _setupAnimations() {
@@ -97,9 +100,21 @@ class _SplashScreenState extends State<SplashScreen>
         if (!mounted) return;
         if (_percent >= 100) {
           timer.cancel();
-          Future.delayed(const Duration(milliseconds: 600), () {
+          Future.delayed(const Duration(milliseconds: 600), () async {
             if (!mounted) return;
-            context.go(AppRoutes.login);
+            await ref.read(authProvider.notifier).checkStoredSession();
+            if (!mounted) return;
+            final authState = ref.read(authProvider);
+            if (authState.status == AuthStatus.authenticated) {
+              final role = authState.user?.role;
+              if (role == 'HR_ADMIN') {
+                context.go(AppRoutes.hrDashboard);
+              } else {
+                context.go(AppRoutes.employeeDashboard);
+              }
+            } else {
+              context.go(AppRoutes.login);
+            }
           });
           return;
         }

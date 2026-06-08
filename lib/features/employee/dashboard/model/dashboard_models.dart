@@ -79,81 +79,102 @@ class EmployeeStatusResponse {
   }
 }
 
-/// One record from GET /api/v1/employees/me/history/
-class AttendanceRecord {
-  final int id;
-  final String logType; // 'IN' or 'OUT'
-  final DateTime timestampGps;
-  final DateTime? timestampDevice;
-  final bool isFlagged;
-
-  const AttendanceRecord({
-    required this.id,
-    required this.logType,
-    required this.timestampGps,
-    this.timestampDevice,
-    required this.isFlagged,
-  });
-
-  factory AttendanceRecord.fromJson(Map<String, dynamic> json) {
-    return AttendanceRecord(
-      id: json['id'] as int,
-      logType: json['log_type'] as String,
-      timestampGps: DateTime.parse(json['timestamp_gps'] as String),
-      timestampDevice: json['timestamp_device'] != null
-          ? DateTime.parse(json['timestamp_device'] as String)
-          : null,
-      isFlagged: json['is_flagged'] as bool? ?? false,
-    );
-  }
-}
 
 /// Computed from today's [AttendanceRecord] list.
 class TodaySummary {
   final DateTime? clockIn;
   final DateTime? clockOut;
   final Duration hoursWorked;
+  final Duration weekTotal;
 
   const TodaySummary({
     this.clockIn,
     this.clockOut,
     required this.hoursWorked,
+    this.weekTotal = Duration.zero,
   });
 
-  factory TodaySummary.fromRecords(List<AttendanceRecord> records) {
-    final now = DateTime.now();
-
-    final todayRecords = records.where((r) {
-      final local = r.timestampGps.toLocal();
-      return local.year == now.year &&
-          local.month == now.month &&
-          local.day == now.day;
-    }).toList()
-      ..sort((a, b) => a.timestampGps.compareTo(b.timestampGps));
-
+  factory TodaySummary.fromAttendance(
+    List<Map<String, dynamic>> attendance, {
+    List<Map<String, dynamic>> weekAttendance = const [],
+  }) {
+    // attendance is a list of paired entries from the report service.
+    // We want the earliest clock_in and latest clock_out for today.
     DateTime? clockIn;
     DateTime? clockOut;
 
-    for (final r in todayRecords) {
-      if (r.logType == 'IN' && clockIn == null) {
-        clockIn = r.timestampGps.toLocal();
+    // Sum only COMPLETE entries for today's display hours.
+    // For the live timer: find the open INCOMPLETE entry (clock_out == null).
+    // Earliest clock_in is only used for "first clocked in at X" display.
+    DateTime? firstClockIn;   // earliest clock_in of the day (display only)
+    DateTime? lastClockOut;   // latest clock_out of the day
+    DateTime? openClockIn;    // most recent unpaired clock_in (live timer base)
+    Duration completedToday = Duration.zero;
+
+    for (final entry in attendance) {
+      final ci = entry['clock_in'];
+      final co = entry['clock_out'];
+      final status = entry['status'] as String? ?? '';
+
+      if (ci != null) {
+        final parsed = DateTime.parse(ci as String).toLocal();
+        if (firstClockIn == null || parsed.isBefore(firstClockIn)) {
+          firstClockIn = parsed;
+        }
+        if (status == 'INCOMPLETE' && co == null) {
+          // Track most recent open session
+          if (openClockIn == null || parsed.isAfter(openClockIn)) {
+            openClockIn = parsed;
+          }
+        }
       }
-      if (r.logType == 'OUT') {
-        clockOut = r.timestampGps.toLocal();
+      if (co != null) {
+        final parsed = DateTime.parse(co as String).toLocal();
+        if (lastClockOut == null || parsed.isAfter(lastClockOut)) {
+          lastClockOut = parsed;
+        }
+      }
+      // Accumulate completed session durations
+      final hw = entry['hours_worked'];
+      if (hw != null && status == 'COMPLETE') {
+        final parts = (hw as String).split(':');
+        if (parts.length >= 2) {
+          final h = int.tryParse(parts[0]) ?? 0;
+          final m = int.tryParse(parts[1]) ?? 0;
+          completedToday += Duration(hours: h, minutes: m);
+        }
       }
     }
 
-    Duration worked = Duration.zero;
-    if (clockIn != null) {
-      final end = clockOut ?? DateTime.now();
-      worked = end.difference(clockIn);
-      if (worked.isNegative) worked = Duration.zero;
+    clockIn = firstClockIn;
+    clockOut = lastClockOut;
+
+    // hoursWorked: sum of completed sessions + live open session if any
+    Duration worked = completedToday;
+    if (openClockIn != null) {
+      final liveElapsed = DateTime.now().difference(openClockIn!);
+      if (!liveElapsed.isNegative) worked += liveElapsed;
+    }
+
+    // Sum hours_worked from COMPLETE week entries
+    Duration weekTotal = Duration.zero;
+    for (final entry in weekAttendance) {
+      final hw = entry['hours_worked'];
+      if (hw != null && (entry['status'] as String? ?? '') == 'COMPLETE') {
+        final parts = (hw as String).split(':');
+        if (parts.length == 2) {
+          final h = int.tryParse(parts[0]) ?? 0;
+          final m = int.tryParse(parts[1]) ?? 0;
+          weekTotal += Duration(hours: h, minutes: m);
+        }
+      }
     }
 
     return TodaySummary(
       clockIn: clockIn,
       clockOut: clockOut,
       hoursWorked: worked,
+      weekTotal: weekTotal,
     );
   }
 }
