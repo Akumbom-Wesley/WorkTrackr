@@ -43,7 +43,13 @@ class _GreetingCardState extends State<GreetingCard> {
     super.dispose();
   }
 
-  bool get _hasCheckedIn => widget.todaySummary.clockIn != null;
+  bool get _isCurrentlyIn =>
+      widget.status.status == 'present' ||
+      widget.status.status == 'break' ||
+      widget.status.status == 'errand' ||
+      widget.status.status == 'assignment';
+
+  bool get _hasCheckedInToday => widget.todaySummary.clockIn != null;
 
   @override
   Widget build(BuildContext context) {
@@ -64,21 +70,22 @@ class _GreetingCardState extends State<GreetingCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Not yet clocked in banner
-          if (!_hasCheckedIn) _NotClockedInBanner(),
+          if (!_hasCheckedInToday) _NotClockedInBanner(),
+          if (_hasCheckedInToday && !_isCurrentlyIn) _ClockedOutBanner(),
 
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _TopRow(now: _now),
+                _TopRow(now: _now, clockInTime: widget.todaySummary.clockIn, isCurrentlyIn: _isCurrentlyIn),
                 const SizedBox(height: 12),
                 _GreetingText(me: widget.me),
                 const SizedBox(height: 16),
-                _ValidationChips(hasCheckedIn: _hasCheckedIn),
+                _ValidationChips(isCurrentlyIn: _isCurrentlyIn, hasCheckedInToday: _hasCheckedInToday),
                 const SizedBox(height: 20),
                 _ClockInButton(
-                  status: widget.status,
+                  isCheckedIn: _isCurrentlyIn,
                   onTap: widget.onClockInTap,
                 ),
               ],
@@ -131,11 +138,54 @@ class _NotClockedInBanner extends StatelessWidget {
   }
 }
 
+// ── Clocked out banner ───────────────────────────────────────────────────
+
+class _ClockedOutBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.securitySuccess.withValues(alpha: 0.12),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.securitySuccess.withValues(alpha: 0.3),
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 16,
+            color: AppColors.securitySuccess,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Clocked out for today',
+            style: AppTextStyles.labelSm.copyWith(
+              color: AppColors.securitySuccess,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Top row ───────────────────────────────────────────────────────────────
 
 class _TopRow extends StatelessWidget {
-  const _TopRow({required this.now});
+  const _TopRow({required this.now, required this.clockInTime, required this.isCurrentlyIn});
+  final DateTime? clockInTime;
   final DateTime now;
+  final bool isCurrentlyIn;
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +194,7 @@ class _TopRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'SYSTEM STATUS: READY',
+          isCurrentlyIn ? 'CLOCKED IN AT' : (clockInTime != null ? 'CLOCKED OUT' : 'NOT CLOCKED IN'),
           style: AppTextStyles.labelXs.copyWith(
             color: AppColors.onPrimaryContainer,
           ),
@@ -161,7 +211,7 @@ class _TopRow extends StatelessWidget {
               ),
             ),
             Text(
-              _formatDate(now),
+              clockInTime != null ? _formatClockIn(clockInTime!) : _formatDate(now),
               style: AppTextStyles.labelXs.copyWith(
                 color: AppColors.onPrimaryContainer,
               ),
@@ -185,6 +235,12 @@ class _TopRow extends StatelessWidget {
       'JUL','AUG','SEP','OCT','NOV','DEC',
     ];
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
+
+  String _formatClockIn(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 }
 
@@ -213,13 +269,7 @@ class _GreetingText extends StatelessWidget {
             height: 1.2,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Ready for deployment.',
-          style: AppTextStyles.bodyMd.copyWith(
-            color: AppColors.onPrimaryContainer,
-          ),
-        ),
+
       ],
     );
   }
@@ -228,8 +278,9 @@ class _GreetingText extends StatelessWidget {
 // ── Validation chips ──────────────────────────────────────────────────────
 
 class _ValidationChips extends StatelessWidget {
-  const _ValidationChips({required this.hasCheckedIn});
-  final bool hasCheckedIn;
+  const _ValidationChips({required this.isCurrentlyIn, required this.hasCheckedInToday});
+  final bool isCurrentlyIn;
+  final bool hasCheckedInToday;
 
   @override
   Widget build(BuildContext context) {
@@ -239,18 +290,18 @@ class _ValidationChips extends StatelessWidget {
       children: [
         _Chip(
           icon: Icons.my_location_rounded,
-          label: hasCheckedIn ? 'GPS Validated' : 'GPS Pending',
-          state: hasCheckedIn ? _ChipState.success : _ChipState.pending,
+          label: isCurrentlyIn ? 'GPS Validated' : (hasCheckedInToday ? 'GPS Validated' : 'GPS Pending'),
+          state: hasCheckedInToday ? _ChipState.success : _ChipState.pending,
         ),
         _Chip(
           icon: Icons.fingerprint,
-          label: hasCheckedIn ? 'Bio Verified' : 'Bio Pending',
-          state: hasCheckedIn ? _ChipState.success : _ChipState.pending,
+          label: isCurrentlyIn ? 'Bio Verified' : (hasCheckedInToday ? 'Bio Verified' : 'Bio Pending'),
+          state: hasCheckedInToday ? _ChipState.success : _ChipState.pending,
         ),
         _Chip(
           icon: Icons.wifi_rounded,
-          label: hasCheckedIn ? 'Network Secure' : 'Network Pending',
-          state: hasCheckedIn ? _ChipState.success : _ChipState.pending,
+          label: isCurrentlyIn ? 'Network Secure' : (hasCheckedInToday ? 'Network Secure' : 'Network Pending'),
+          state: hasCheckedInToday ? _ChipState.success : _ChipState.pending,
         ),
       ],
     );
@@ -316,23 +367,15 @@ class _Chip extends StatelessWidget {
 // ── Clock-in button ───────────────────────────────────────────────────────
 
 class _ClockInButton extends StatelessWidget {
-  const _ClockInButton({required this.status, this.onTap});
+  const _ClockInButton({required this.isCheckedIn, this.onTap});
 
-  final EmployeeStatusResponse status;
+  final bool isCheckedIn;
   final VoidCallback? onTap;
-
-  bool get _isCheckedIn =>
-      status.status == 'present' ||
-      status.status == 'break' ||
-      status.status == 'errand' ||
-      status.status == 'assignment';
 
   @override
   Widget build(BuildContext context) {
-    final label =
-        _isCheckedIn ? 'CLOCK OUT' : 'CLOCK IN';
-    final icon =
-        _isCheckedIn ? Icons.logout_rounded : Icons.login_rounded;
+    final label = isCheckedIn ? 'CLOCK OUT' : 'CLOCK IN';
+    final icon = isCheckedIn ? Icons.logout_rounded : Icons.login_rounded;
 
     return SizedBox(
       width: double.infinity,

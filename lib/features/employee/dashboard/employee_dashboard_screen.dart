@@ -5,9 +5,9 @@ import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/router/app_router.dart';
+import '../../auth/auth_provider.dart';
 import '../../../shared/widgets/worktrackr_app_bar.dart';
 import '../../../shared/widgets/worktrackr_drawer.dart';
-import 'model/dashboard_models.dart';
 import 'providers/dashboard_providers.dart';
 import 'widgets/dashboard_error_view.dart';
 import 'widgets/dashboard_shimmer.dart';
@@ -40,12 +40,10 @@ class _EmployeeDashboardScreenState
     super.dispose();
   }
 
-  List<PersistentTabConfig> _tabs(DashboardData? data) => [
+  List<PersistentTabConfig> _tabs() => [
     PersistentTabConfig(
       screen: _DashboardTab(
         scaffoldKey: _scaffoldKey,
-        data: data,
-        ref: ref,
       ),
       item: ItemConfig(
         icon: const Icon(Icons.dashboard_rounded),
@@ -103,12 +101,15 @@ class _EmployeeDashboardScreenState
             ? data.me.fullName
             : data.me.username,
         employeeId: data.me.erpnextEmployeeId,
-        onLogoutTap: () {},
+        onLogoutTap: () async {
+          await ref.read(authProvider.notifier).logout();
+          if (context.mounted) context.go(AppRoutes.login);
+        },
       )
           : const WorkTrackrDrawer(),
       body: PersistentTabView(
         controller: _navController,
-        tabs: _tabs(data),
+        tabs: _tabs(),
         navBarBuilder: (navBarConfig) => Style1BottomNavBar(
           navBarConfig: navBarConfig,
           navBarDecoration: const NavBarDecoration(
@@ -123,15 +124,9 @@ class _EmployeeDashboardScreenState
 // ── Dashboard tab body ────────────────────────────────────────────────────
 
 class _DashboardTab extends ConsumerWidget {
-  const _DashboardTab({
-    required this.scaffoldKey,
-    required this.data,
-    required this.ref,
-  });
+  const _DashboardTab({required this.scaffoldKey});
 
   final GlobalKey<ScaffoldState> scaffoldKey;
-  final DashboardData? data;
-  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -159,7 +154,9 @@ class _DashboardTab extends ConsumerWidget {
                     status: data.employeeStatus,
                     todaySummary: data.todaySummary,
                     onStatusTap: () {},
-                    onClockInTap: () => context.push(AppRoutes.checkin),
+                    onClockInTap: () => context.push(AppRoutes.checkin).then((_) {
+                      ref.read(dashboardProvider.notifier).refresh();
+                    }),
                   ),
                   const SizedBox(height: 16),
                   HoursSummaryGrid(

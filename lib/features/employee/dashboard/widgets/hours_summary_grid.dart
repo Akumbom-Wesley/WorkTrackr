@@ -1,11 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../model/dashboard_models.dart';
 
-/// 2×2 grid: Today's Hours, Week Total, Overtime, Current Status.
-/// Matches the reference design exactly.
-class HoursSummaryGrid extends StatelessWidget {
+class HoursSummaryGrid extends StatefulWidget {
   const HoursSummaryGrid({
     super.key,
     required this.summary,
@@ -16,6 +15,51 @@ class HoursSummaryGrid extends StatelessWidget {
   final TodaySummary summary;
   final EmployeeStatusResponse status;
   final VoidCallback? onStatusTap;
+
+  @override
+  State<HoursSummaryGrid> createState() => _HoursSummaryGridState();
+}
+
+class _HoursSummaryGridState extends State<HoursSummaryGrid> {
+  late Timer _timer;
+  late Duration _elapsed;
+
+  bool get _isClockedIn =>
+      widget.status.status == 'present' ||
+      widget.status.status == 'break' ||
+      widget.status.status == 'errand' ||
+      widget.status.status == 'assignment';
+
+  @override
+  void initState() {
+    super.initState();
+    _elapsed = _computeElapsed();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_isClockedIn) {
+        setState(() => _elapsed = _computeElapsed());
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(HoursSummaryGrid oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _elapsed = _computeElapsed();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  Duration _computeElapsed() {
+    final clockIn = widget.summary.clockIn;
+    if (clockIn == null) return Duration.zero;
+    final end = (_isClockedIn) ? DateTime.now() : (widget.summary.clockOut ?? DateTime.now());
+    final d = end.difference(clockIn);
+    return d.isNegative ? Duration.zero : d;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +73,14 @@ class HoursSummaryGrid extends StatelessWidget {
       children: [
         _StatCard(
           label: "TODAY'S HOURS",
-          value: _formatDuration(summary.hoursWorked),
-          sub: 'Target: 8h',
+          value: _formatDuration(_elapsed),
+          sub: widget.summary.clockIn != null
+              ? 'Since ${_formatTime(widget.summary.clockIn!)}'
+              : 'Not clocked in',
         ),
-        const _StatCard(
+        _StatCard(
           label: 'WEEK TOTAL',
-          value: '--',
+          value: _formatWeek(widget.summary.weekTotal),
           sub: 'Target: 40h',
         ),
         const _StatCard(
@@ -43,14 +89,28 @@ class HoursSummaryGrid extends StatelessWidget {
           sub: 'This Pay Period',
         ),
         _StatusCard(
-          status: status.status,
-          onTap: onStatusTap,
+          status: widget.status.status,
+          onTap: widget.onStatusTap,
         ),
       ],
     );
   }
 
   String _formatDuration(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    final s = d.inSeconds.remainder(60);
+    return '${h}h ${m.toString().padLeft(2, '0')}m ${s.toString().padLeft(2, '0')}s';
+  }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  String _formatWeek(Duration d) {
+    if (d == Duration.zero) return '--';
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
     return '${h}h ${m.toString().padLeft(2, '0')}m';

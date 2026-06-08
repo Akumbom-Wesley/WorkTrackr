@@ -16,25 +16,32 @@ class DashboardRepository {
     return MeResponse.fromJson(response.data!);
   }
 
-  Future<List<AttendanceRecord>> fetchTodayHistory() async {
+  Future<TodaySummary> fetchTodaySummary() async {
     final now = DateTime.now();
-    final dateStr =
+    final todayStr =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
-    final response = await _dio.get<dynamic>(
-      _history,
-      queryParameters: {'date_from': dateStr, 'date_to': dateStr},
-    );
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final mondayStr =
+        '${monday.year}-${monday.month.toString().padLeft(2, '0')}-${monday.day.toString().padLeft(2, '0')}';
 
-    final data = response.data;
-    final List<dynamic> raw = data is List
-        ? data
-        : (data as Map<String, dynamic>)['results'] as List<dynamic>? ?? [];
+    final results = await Future.wait([
+      _dio.get<Map<String, dynamic>>(
+        _history,
+        queryParameters: {'date_from': todayStr, 'date_to': todayStr},
+      ),
+      _dio.get<Map<String, dynamic>>(
+        _history,
+        queryParameters: {'date_from': mondayStr, 'date_to': todayStr},
+      ),
+    ]);
 
-    return raw
-        .cast<Map<String, dynamic>>()
-        .map(AttendanceRecord.fromJson)
-        .toList();
+    final todayAttendance = (results[0].data!['attendance'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final weekAttendance = (results[1].data!['attendance'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+
+    return TodaySummary.fromAttendance(todayAttendance, weekAttendance: weekAttendance);
   }
 
   Future<EmployeeStatusResponse> fetchStatus(int employeeId) async {
@@ -48,11 +55,11 @@ class DashboardRepository {
     final me = await fetchMe();
 
     final results = await Future.wait([
-      fetchTodayHistory(),
+      fetchTodaySummary(),
       if (me.employeeId != null) fetchStatus(me.employeeId!),
     ]);
 
-    final records = results[0] as List<AttendanceRecord>;
+    final todaySummary = results[0] as TodaySummary;
     final statusResult = me.employeeId != null
         ? results[1] as EmployeeStatusResponse
         : const EmployeeStatusResponse();
@@ -60,7 +67,7 @@ class DashboardRepository {
     return DashboardData(
       me: me,
       employeeStatus: statusResult,
-      todaySummary: TodaySummary.fromRecords(records),
+      todaySummary: todaySummary,
     );
   }
 }

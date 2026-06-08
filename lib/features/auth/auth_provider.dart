@@ -52,6 +52,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.authenticated,
         user: LoggedInUser(
           userId: authResponse.userId,
+          employeeId: authResponse.employeeId,
+          erpnextEmployeeId: authResponse.erpnextEmployeeId,
+          fullName: authResponse.fullName,
           role: authResponse.role,
           accessToken: authResponse.access,
           refreshToken: authResponse.refresh,
@@ -59,10 +62,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
         errorMessage: null,
       );
     } on DioException catch (e) {
-      final message = _mapDioError(e);
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: message,
+        errorMessage: _mapDioError(e),
       );
     } catch (e) {
       state = state.copyWith(
@@ -106,9 +108,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 }
 
 final authRepositoryProvider = Provider<AuthRepository>(
-      (ref) => AuthRepository(),
+  (ref) => AuthRepository(),
 );
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-      (ref) => AuthNotifier(ref.watch(authRepositoryProvider)),
+  (ref) => AuthNotifier(ref.watch(authRepositoryProvider)),
 );
