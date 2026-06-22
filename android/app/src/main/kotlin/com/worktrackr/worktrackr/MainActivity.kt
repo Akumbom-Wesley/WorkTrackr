@@ -14,22 +14,39 @@ class MainActivity : FlutterFragmentActivity() {
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel)
             .setMethodCallHandler { call, result ->
-                if (call.method == "getWifiFrequency") {
-                    try {
-                        val wifiManager = applicationContext
-                            .getSystemService(Context.WIFI_SERVICE) as WifiManager
-                        @Suppress("DEPRECATION")
-                        val info = wifiManager.connectionInfo
-                        if (info != null && info.frequency > 0) {
-                            result.success(info.frequency)
-                        } else {
-                            result.success(null)
+                try {
+                    val wifiManager = applicationContext
+                        .getSystemService(Context.WIFI_SERVICE) as WifiManager
+                    @Suppress("DEPRECATION")
+                    val info = wifiManager.connectionInfo
+
+                    when (call.method) {
+                        "getWifiFrequency" -> {
+                            if (info != null && info.frequency > 0) {
+                                result.success(info.frequency)
+                            } else {
+                                result.success(null)
+                            }
                         }
-                    } catch (e: Exception) {
-                        result.success(null)
+                        "getWifiRssi" -> {
+                            if (info != null && info.rssi != 0 && info.rssi > -127) {
+                                result.success(info.rssi)
+                            } else {
+                                result.success(null)
+                            }
+                        }
+                        "getWifiBssid" -> {
+                            val bssid = info?.bssid
+                            if (!bssid.isNullOrEmpty() && bssid != "02:00:00:00:00:00") {
+                                result.success(bssid)
+                            } else {
+                                result.success(null)
+                            }
+                        }
+                        else -> result.notImplemented()
                     }
-                } else {
-                    result.notImplemented()
+                } catch (e: Exception) {
+                    result.success(null)
                 }
             }
     }
