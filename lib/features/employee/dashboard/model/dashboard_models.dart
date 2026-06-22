@@ -152,7 +152,7 @@ class TodaySummary {
     // hoursWorked: sum of completed sessions + live open session if any
     Duration worked = completedToday;
     if (openClockIn != null) {
-      final liveElapsed = DateTime.now().difference(openClockIn!);
+      final liveElapsed = DateTime.now().difference(openClockIn);
       if (!liveElapsed.isNegative) worked += liveElapsed;
     }
 

@@ -1,3 +1,5 @@
+import 'dart:math';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -5,8 +7,10 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import 'checkin_repository.dart';
 import 'checkin_service.dart';
+import '../../offline/models/queued_checkin.dart';
+import '../../offline/queue/checkin_queue.dart';
 
-enum _Step { biometric, wifi, gps, done, failed }
+enum _Step { biometric, wifi, gps, done, failed, queued }
 
 class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
@@ -48,27 +52,43 @@ class _CheckInScreenState extends State<CheckInScreen>
   }
 
   Future<void> _runPipeline() async {
-    // ── Device check ──────────────────────────────────────────────────
-    try {
-      final registered = await _repository.isDeviceRegistered();
-      if (!registered) {
-        await _repository.registerDevice();
+    final List<ConnectivityResult> connectivity =
+        await Connectivity().checkConnectivity();
+    final isOffline = connectivity.contains(ConnectivityResult.none);
+
+    if (!isOffline) {
+      try {
+        final registered = await _repository.isDeviceRegistered();
+        if (!registered) {
+          await _repository.registerDevice();
+          await _repository.setCachedDeviceRegistered(true);
+        } else {
+          await _repository.setCachedDeviceRegistered(true);
+        }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 403) {
+          _fail('Your device has been deactivated. Contact HR.');
+        } else {
+          _fail('Device registration failed. Check your connection.');
+        }
+        return;
       }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 403) {
-        _fail('Your device has been deactivated. Contact HR.');
-      } else {
-        _fail('Device registration failed. Check your connection.');
+
+      _logType = await _repository.resolveLogType();
+    } else {
+      final cachedRegistered = await _repository.getCachedDeviceRegistered();
+      if (!cachedRegistered) {
+        _fail('This device must go online once for initial registration before offline check-in can work.');
+        return;
       }
-      return;
+
+      _logType = await _repository.resolveLogTypeOfflineSafe();
     }
 
-    // ── Resolve log type (IN vs OUT) ──────────────────────────────────
-    _logType = await _repository.resolveLogType();
     if (!mounted) return;
     setState(() => _resolving = false);
 
-    // ── Step 1: Biometric ─────────────────────────────────────────────
+    setState(() => _step = _Step.biometric);
     final bioResult = await _service.runBiometric();
     if (!mounted) return;
     if (!bioResult.passed) {
@@ -76,7 +96,6 @@ class _CheckInScreenState extends State<CheckInScreen>
       return;
     }
 
-    // ── Step 2: Wi-Fi ─────────────────────────────────────────────────
     setState(() => _step = _Step.wifi);
     final WifiResult wifi = await _service.runWifi();
     if (!mounted) return;
@@ -85,7 +104,6 @@ class _CheckInScreenState extends State<CheckInScreen>
       return;
     }
 
-    // ── Step 3: GPS ───────────────────────────────────────────────────
     setState(() => _step = _Step.gps);
     final GpsResult gps = await _service.runGps();
     if (!mounted) return;
@@ -94,43 +112,73 @@ class _CheckInScreenState extends State<CheckInScreen>
       return;
     }
 
-    // ── Anti-spoofing ─────────────────────────────────────────────────
     final SpoofResult flags = await _service.getAntispoofingFlags(gps.position!);
     if (!mounted) return;
 
-    // ── Submit ────────────────────────────────────────────────────────
-    try {
-      final deviceId = await _repository.getDeviceUniqueId();
+    final deviceId = await _repository.getDeviceUniqueId();
+    final payload = CheckinPayload(
+      deviceUniqueId: deviceId,
+      logType: _logType,
+      biometricPassed: true,
+      latSmoothed: gps.position!.latitude,
+      lngSmoothed: gps.position!.longitude,
+      accuracyMetres: gps.position!.accuracy.round(),
+      timestampGps: gps.position!.timestamp,
+      timestampDevice: DateTime.now().toUtc(),
+      wifiBand: wifi.band,
+      wifiSsid: wifi.ssid,
+      wifiBssid: wifi.bssid,
+      rssiAvg: wifi.rssi,
+      mockLocation: flags.mockLocation,
+      isRooted: flags.isRooted,
+    );
 
-      final payload = CheckinPayload(
-        deviceUniqueId: deviceId,
-        logType: _logType,
-        biometricPassed: true,
-        latSmoothed: gps.position!.latitude,
-        lngSmoothed: gps.position!.longitude,
-        accuracyMetres: gps.position!.accuracy.round(),
-        timestampGps: gps.position!.timestamp,
-        timestampDevice: DateTime.now().toUtc(),
-        wifiBand: wifi.band,
-        wifiSsid: wifi.ssid,
-        wifiBssid: wifi.bssid,
-        rssiAvg: wifi.rssi,
-        mockLocation: flags.mockLocation,
-        isRooted: flags.isRooted,
+    debugPrint(
+      '[CHECKIN] Sending payload location: '
+      'lat=${payload.latSmoothed}, '
+      'lng=${payload.lngSmoothed}, '
+      'accuracy=${payload.accuracyMetres}m, '
+      'timestampGps=${payload.timestampGps}, '
+      'timestampDevice=${payload.timestampDevice}',
+    );
+
+    if (isOffline) {
+      final queued = QueuedCheckin(
+        id: _generateId(),
+        payload: payload.toJson(),
+        queuedAt: DateTime.now().toUtc(),
       );
+      await CheckinQueue.instance.enqueue(queued);
+      await _repository.cacheLastLogType(_logType == 'IN' ? 'OUT' : 'IN');
 
-      await _repository.submitCheckin(payload.toJson());
       if (!mounted) return;
+      setState(() => _step = _Step.queued);
+      _pulseController.stop();
+      await Future.delayed(const Duration(seconds: 2));
+      if (!mounted) return;
+      context.pop();
+      return;
+    }
 
+    try {
+      await _repository.submitCheckin(payload.toJson());
+      await _repository.cacheLastLogType(_logType == 'IN' ? 'OUT' : 'IN');
+
+      if (!mounted) return;
       setState(() => _step = _Step.done);
       _pulseController.stop();
-
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       context.pop();
     } on DioException catch (e) {
       _fail(_mapApiError(e));
     }
+  }
+
+  String _generateId() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final rng = Random.secure();
+    return List.generate(32, (_) => chars[rng.nextInt(chars.length)]).join();
   }
 
   void _fail(String reason) {
@@ -166,8 +214,6 @@ class _CheckInScreenState extends State<CheckInScreen>
         return 'Something went wrong. Please try again.';
     }
   }
-
-  // ── Build ──────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +269,17 @@ class _CheckInScreenState extends State<CheckInScreen>
           border: Border.all(color: AppColors.securitySuccess, width: 2),
         ),
         child: const Icon(Icons.check_rounded, size: 52, color: AppColors.securitySuccess),
+      );
+    }
+    if (_step == _Step.queued) {
+      return Container(
+        width: 100, height: 100,
+        decoration: BoxDecoration(
+          color: AppColors.securityWarning.withValues(alpha: 0.15),
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.securityWarning, width: 2),
+        ),
+        child: const Icon(Icons.cloud_off_rounded, size: 52, color: AppColors.securityWarning),
       );
     }
     if (_step == _Step.failed) {
@@ -287,14 +344,8 @@ class _CheckInScreenState extends State<CheckInScreen>
 
   _RowState _rowState(_Step forStep) {
     final order = [_Step.biometric, _Step.wifi, _Step.gps];
-    if (_step == _Step.done) return _RowState.success;
-    if (_step == _Step.failed) {
-      final currentIdx = order.indexOf(_step);
-      final stepIdx = order.indexOf(forStep);
-      if (stepIdx < currentIdx) return _RowState.success;
-      if (stepIdx == currentIdx) return _RowState.failed;
-      return _RowState.pending;
-    }
+    if (_step == _Step.done || _step == _Step.queued) return _RowState.success;
+    if (_step == _Step.failed) return _RowState.pending;
     final currentIdx = order.indexOf(_step);
     final stepIdx = order.indexOf(forStep);
     if (stepIdx < currentIdx) return _RowState.success;
@@ -309,6 +360,7 @@ class _CheckInScreenState extends State<CheckInScreen>
       case _Step.gps:       return Icons.my_location_rounded;
       case _Step.done:      return Icons.check_rounded;
       case _Step.failed:    return Icons.close_rounded;
+      case _Step.queued:    return Icons.cloud_off_rounded;
     }
   }
 
@@ -319,6 +371,7 @@ class _CheckInScreenState extends State<CheckInScreen>
       case _Step.gps:       return 'Acquiring Location';
       case _Step.done:      return _logType == 'OUT' ? 'Clocked Out Successfully' : 'Clocked In Successfully';
       case _Step.failed:    return 'Verification Failed';
+      case _Step.queued:    return 'Saved Offline';
     }
   }
 
@@ -329,11 +382,10 @@ class _CheckInScreenState extends State<CheckInScreen>
       case _Step.gps:       return 'Confirming you are within\nthe office location';
       case _Step.done:      return 'Your attendance has been\nrecorded successfully';
       case _Step.failed:    return _failureReason ?? 'Please try again';
+      case _Step.queued:    return 'Your attendance will sync\nautomatically when back online';
     }
   }
 }
-
-// ── Step row ───────────────────────────────────────────────────────────────
 
 enum _RowState { pending, loading, success, failed }
 

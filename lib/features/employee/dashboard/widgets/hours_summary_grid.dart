@@ -60,7 +60,6 @@ class _HoursSummaryGridState extends State<HoursSummaryGrid> {
     final d = end.difference(clockIn);
     return d.isNegative ? Duration.zero : d;
   }
-
   @override
   Widget build(BuildContext context) {
     return GridView.count(
