@@ -9,6 +9,9 @@ class CheckinRepository {
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final SecureStorage _storage = SecureStorage.instance;
 
+  static const String _cachedDeviceRegisteredKey = 'cached_device_registered';
+  static const String _cachedNextLogTypeKey = 'cached_next_log_type';
+
   Future<String> getDeviceUniqueId() async {
     final android = await _deviceInfo.androidInfo;
     return android.id;
@@ -24,31 +27,64 @@ class CheckinRepository {
     return int.parse(id!);
   }
 
-  /// Returns 'IN' or 'OUT' based on current employee status.
+  Future<void> setCachedDeviceRegistered(bool value) async {
+    await _storage.write(
+      key: _cachedDeviceRegisteredKey,
+      value: value ? 'true' : 'false',
+    );
+  }
+
+  Future<bool> getCachedDeviceRegistered() async {
+    final value = await _storage.read(key: _cachedDeviceRegisteredKey);
+    return value == 'true';
+  }
+
+  Future<void> cacheLastLogType(String nextValue) async {
+    await _storage.write(
+      key: _cachedNextLogTypeKey,
+      value: nextValue,
+    );
+  }
+
+  Future<String> resolveLogTypeOfflineSafe() async {
+    final cached = await _storage.read(key: _cachedNextLogTypeKey) ?? 'IN';
+    if (cached == 'IN' || cached == 'OUT') {
+      return cached;
+    }
+    return 'IN';
+  }
+
   Future<String> resolveLogType() async {
     final employeeId = await getEmployeeId();
     try {
       final response = await _dio.get('/employees/$employeeId/status/');
       final status = response.data['status'] as String?;
       const validCheckoutStatuses = {'present', 'break', 'errand', 'assignment'};
-      if (status != null && validCheckoutStatuses.contains(status.toLowerCase())) {
-        return 'OUT';
-      }
-      return 'IN';
+
+      final resolved =
+          status != null && validCheckoutStatuses.contains(status.toLowerCase())
+              ? 'OUT'
+              : 'IN';
+
+      await cacheLastLogType(resolved);
+      return resolved;
     } on DioException {
-      return 'IN';
+      return await resolveLogTypeOfflineSafe();
     }
   }
 
-  /// Returns true if device is already registered and active.
   Future<bool> isDeviceRegistered() async {
     final deviceId = await getDeviceUniqueId();
     try {
       final response = await _dio.get('/devices/me/');
       if (response.statusCode == 200) {
         final data = response.data;
-        return data['device_unique_id'] == deviceId &&
+        final registered = data['device_unique_id'] == deviceId &&
             data['is_active'] == true;
+        if (registered) {
+          await setCachedDeviceRegistered(true);
+        }
+        return registered;
       }
       return false;
     } on DioException catch (e) {
@@ -57,7 +93,6 @@ class CheckinRepository {
     }
   }
 
-  /// Registers this device. Throws on failure.
   Future<void> registerDevice() async {
     final deviceId = await getDeviceUniqueId();
     final label = await getDeviceLabel();
@@ -65,9 +100,9 @@ class CheckinRepository {
       'device_unique_id': deviceId,
       'attendance_device_id': label,
     });
+    await setCachedDeviceRegistered(true);
   }
 
-  /// Submits a check-in payload. Returns the response body.
   Future<Map<String, dynamic>> submitCheckin(
       Map<String, dynamic> payload) async {
     final response = await _dio.post('/checkins/', data: payload);
