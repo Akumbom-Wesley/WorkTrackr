@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:safe_device/safe_device.dart';
+import 'package:flutter/material.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import '../../../core/utils/wifi_band_channel.dart';
 
 class StepResult {
   final bool passed;
@@ -90,8 +93,6 @@ class CheckinService {
       final canCheck = await _localAuth.canCheckBiometrics;
       final isSupported = await _localAuth.isDeviceSupported();
 
-
-
       if (!canCheck || !isSupported) {
         return const StepResult.fail(
           'BIOMETRIC_UNAVAILABLE',
@@ -135,14 +136,27 @@ class CheckinService {
         );
       }
 
-      // Band detection requires native channel — defaulting to UNAVAILABLE.
-      // TODO: feature/wifi-band — implement WifiInfo.getFrequency() native channel
+      final band = await WifiBandChannel.getBand();
+      final rssi = await WifiBandChannel.getRssi();
+      final bssid = await WifiBandChannel.getBssid() ?? '';
+
+      String ssid = '';
+      try {
+        final info = NetworkInfo();
+        final raw = await info.getWifiName() ?? '';
+        ssid = (raw.startsWith('"') && raw.endsWith('"'))
+            ? raw.substring(1, raw.length - 1)
+            : raw;
+      } catch (_) {}
+
+      debugPrint('[WIFI] band=$band ssid=$ssid bssid=$bssid rssi=$rssi');
+
       return (
         result: const StepResult.pass(),
-        band: 'UNAVAILABLE',
-        ssid: '',
-        bssid: '',
-        rssi: null,
+        band: band,
+        ssid: ssid,
+        bssid: bssid,
+        rssi: rssi,
       );
     } catch (_) {
       return (
@@ -195,21 +209,36 @@ class CheckinService {
 
       Position? best;
       int attempts = 0;
+
       await for (final pos in Geolocator.getPositionStream(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.bestForNavigation,
+          accuracy: LocationAccuracy.best,
           distanceFilter: 0,
+          timeLimit: Duration(seconds: 20),
         ),
+      ).timeout(
+        const Duration(seconds: 25),
+        onTimeout: (sink) => sink.close(),
       )) {
         attempts++;
         if (best == null || pos.accuracy < best.accuracy) best = pos;
-        if (best.accuracy <= 10.0 || attempts >= 10) break;
+        if (best.accuracy <= 30.0 || attempts >= 8) break;
+      }
+
+      if (best == null) {
+        return (
+          result: const StepResult.fail(
+            'GPS_TIMEOUT',
+            'Could not get a location fix. Move to an open area and try again.',
+          ),
+          position: null,
+        );
       }
 
       return (result: const StepResult.pass(), position: best);
     } catch (e) {
       return (
-        result: StepResult.fail('GPS_ERROR', 'Could not get location: \$e'), // ignore: prefer_const_constructors
+        result: StepResult.fail('GPS_ERROR', 'Could not get location: $e'),
         position: null,
       );
     }
