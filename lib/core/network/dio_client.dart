@@ -19,6 +19,10 @@ class DioClient {
   /// The configured Dio instance — use this everywhere.
   Dio get dio => _dio;
 
+  /// Called when a token refresh fails and the session is cleared.
+  /// Register this in main.dart to trigger logout + navigation.
+  static VoidCallback? onSessionExpired;
+
   // ── Factory ──────────────────────────────────────────────────────────────
 
   Dio _createDio() {
@@ -167,5 +171,6 @@ class _AuthInterceptor extends Interceptor {
     await _storage.delete(key: AppConstants.refreshTokenKey);
     await _storage.delete(key: AppConstants.roleKey);
     await _storage.delete(key: AppConstants.userIdKey);
+    DioClient.onSessionExpired?.call();
   }
 }

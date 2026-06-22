@@ -101,6 +101,7 @@ class _EmployeeDashboardScreenState
             ? data.me.fullName
             : data.me.username,
         employeeId: data.me.erpnextEmployeeId,
+        onOfflineQueueTap: () => context.push(AppRoutes.offlineQueue),
         onLogoutTap: () async {
           await ref.read(authProvider.notifier).logout();
           if (context.mounted) context.go(AppRoutes.login);
