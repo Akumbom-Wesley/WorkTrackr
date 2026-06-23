@@ -6,6 +6,7 @@ import 'package:safe_device/safe_device.dart';
 import 'package:flutter/material.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import '../../../core/utils/wifi_band_channel.dart';
+import 'checkin_repository.dart';
 
 class StepResult {
   final bool passed;
@@ -121,7 +122,7 @@ class CheckinService {
 
   // ── Step 2: Wi-Fi ─────────────────────────────────────────────────────
 
-  Future<WifiResult> runWifi() async {
+  Future<WifiResult> runWifi({GeofenceSiteConfig? site}) async {
     try {
       final results = await Connectivity().checkConnectivity();
       final isWifi = results.contains(ConnectivityResult.wifi);
@@ -150,6 +151,30 @@ class CheckinService {
       } catch (_) {}
 
       debugPrint('[WIFI] band=$band ssid=$ssid bssid=$bssid rssi=$rssi');
+
+      // Client-side validation against GeofenceSite config
+      if (site != null) {
+        final rssiOk = rssi != null && rssi >= site.rssiThreshold;
+        final bssidOk = site.wifiBssid.isEmpty || bssid == site.wifiBssid;
+        final bandOk = !site.enforce5ghz || band == '5GHz';
+
+        debugPrint(
+          '[WIFI] rssiOk=$rssiOk bssidOk=$bssidOk bandOk=$bandOk',
+        );
+
+        if (!rssiOk || !bssidOk || !bandOk) {
+          return (
+            result: const StepResult.fail(
+              'WIFI_CREDENTIAL_MISMATCH',
+              'Office Wi-Fi not detected or signal too weak.',
+            ),
+            band: band,
+            ssid: ssid,
+            bssid: bssid,
+            rssi: rssi,
+          );
+        }
+      }
 
       return (
         result: const StepResult.pass(),
