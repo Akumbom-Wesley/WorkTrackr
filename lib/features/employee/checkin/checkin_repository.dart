@@ -4,6 +4,38 @@ import '../../../core/network/dio_client.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../core/constants/app_constants.dart';
 
+class GeofenceSiteConfig {
+  final String wifiSsid;
+  final String wifiBssid;
+  final int rssiThreshold;
+  final bool enforce5ghz;
+  final double latitude;
+  final double longitude;
+  final int radiusMetres;
+
+  const GeofenceSiteConfig({
+    required this.wifiSsid,
+    required this.wifiBssid,
+    required this.rssiThreshold,
+    required this.enforce5ghz,
+    required this.latitude,
+    required this.longitude,
+    required this.radiusMetres,
+  });
+
+  factory GeofenceSiteConfig.fromJson(Map<String, dynamic> json) {
+    return GeofenceSiteConfig(
+      wifiSsid: json['wifi_ssid'] as String? ?? '',
+      wifiBssid: json['wifi_bssid'] as String? ?? '',
+      rssiThreshold: json['rssi_threshold'] as int? ?? -70,
+      enforce5ghz: json['enforce_5ghz'] as bool? ?? false,
+      latitude: double.parse(json['latitude'].toString()),
+      longitude: double.parse(json['longitude'].toString()),
+      radiusMetres: json['radius_metres'] as int? ?? 50,
+    );
+  }
+}
+
 class CheckinRepository {
   final Dio _dio = DioClient.instance.dio;
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
@@ -59,7 +91,12 @@ class CheckinRepository {
     try {
       final response = await _dio.get('/employees/$employeeId/status/');
       final status = response.data['status'] as String?;
-      const validCheckoutStatuses = {'present', 'break', 'errand', 'assignment'};
+      const validCheckoutStatuses = {
+        'present',
+        'break',
+        'errand',
+        'assignment'
+      };
 
       final resolved =
           status != null && validCheckoutStatuses.contains(status.toLowerCase())
@@ -79,8 +116,8 @@ class CheckinRepository {
       final response = await _dio.get('/devices/me/');
       if (response.statusCode == 200) {
         final data = response.data;
-        final registered = data['device_unique_id'] == deviceId &&
-            data['is_active'] == true;
+        final registered =
+            data['device_unique_id'] == deviceId && data['is_active'] == true;
         if (registered) {
           await setCachedDeviceRegistered(true);
         }
@@ -101,6 +138,20 @@ class CheckinRepository {
       'attendance_device_id': label,
     });
     await setCachedDeviceRegistered(true);
+  }
+
+  Future<GeofenceSiteConfig?> fetchGeofenceSite() async {
+    try {
+      final response = await _dio.get('/companies/geofence-site/');
+      if (response.statusCode == 200) {
+        return GeofenceSiteConfig.fromJson(
+          response.data as Map<String, dynamic>,
+        );
+      }
+      return null;
+    } on DioException {
+      return null;
+    }
   }
 
   Future<Map<String, dynamic>> submitCheckin(
