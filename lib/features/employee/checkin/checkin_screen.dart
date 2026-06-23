@@ -12,6 +12,8 @@ import '../../offline/queue/checkin_queue.dart';
 
 enum _Step { biometric, wifi, gps, done, failed, queued }
 
+enum _Status { pending, loading, passed, failed }
+
 class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
 
@@ -25,6 +27,12 @@ class _CheckInScreenState extends State<CheckInScreen>
   String? _failureReason;
   String _logType = 'IN';
   bool _resolving = true;
+  GeofenceSiteConfig? _siteConfig;
+
+  _Status _bioStatus = _Status.loading;
+  _Status _wifiStatus = _Status.loading;
+  _Status _gpsStatus = _Status.loading;
+  bool _gpsReached = false;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -53,7 +61,7 @@ class _CheckInScreenState extends State<CheckInScreen>
 
   Future<void> _runPipeline() async {
     final List<ConnectivityResult> connectivity =
-        await Connectivity().checkConnectivity();
+    await Connectivity().checkConnectivity();
     final isOffline = connectivity.contains(ConnectivityResult.none);
 
     if (!isOffline) {
@@ -75,10 +83,13 @@ class _CheckInScreenState extends State<CheckInScreen>
       }
 
       _logType = await _repository.resolveLogType();
+      _siteConfig = await _repository.fetchGeofenceSite();
     } else {
       final cachedRegistered = await _repository.getCachedDeviceRegistered();
       if (!cachedRegistered) {
-        _fail('This device must go online once for initial registration before offline check-in can work.');
+        _fail(
+          'This device must go online once for initial registration before offline check-in can work.',
+        );
         return;
       }
 
@@ -88,31 +99,70 @@ class _CheckInScreenState extends State<CheckInScreen>
     if (!mounted) return;
     setState(() => _resolving = false);
 
-    setState(() => _step = _Step.biometric);
+    if (!mounted) return;
+    setState(() {
+      _step = _Step.biometric;
+      _bioStatus = _Status.loading;
+      _wifiStatus = _Status.loading;
+      _gpsStatus = _Status.loading;
+      _gpsReached = false;
+      _failureReason = null;
+    });
+
     final bioResult = await _service.runBiometric();
     if (!mounted) return;
+
     if (!bioResult.passed) {
+      setState(() {
+        _bioStatus = _Status.failed;
+      });
       _fail(bioResult.errorMessage!);
       return;
     }
 
-    setState(() => _step = _Step.wifi);
-    final WifiResult wifi = await _service.runWifi();
+    setState(() {
+      _bioStatus = _Status.passed;
+      _step = _Step.wifi;
+      _wifiStatus = _Status.loading;
+    });
+
+    final WifiResult wifi = await _service.runWifi(site: _siteConfig);
     if (!mounted) return;
+
     if (!wifi.result.passed) {
+      setState(() {
+        _wifiStatus = _Status.failed;
+      });
       _fail(wifi.result.errorMessage!);
       return;
     }
 
-    setState(() => _step = _Step.gps);
+    setState(() {
+      _wifiStatus = _Status.passed;
+      _step = _Step.gps;
+      _gpsReached = true;
+      _gpsStatus = _Status.loading;
+    });
+
     final GpsResult gps = await _service.runGps();
     if (!mounted) return;
+
     if (!gps.result.passed || gps.position == null) {
+      setState(() {
+        _gpsReached = true;
+        _gpsStatus = _Status.failed;
+      });
       _fail(gps.result.errorMessage!);
       return;
     }
 
-    final SpoofResult flags = await _service.getAntispoofingFlags(gps.position!);
+    setState(() {
+      _gpsReached = true;
+      _gpsStatus = _Status.passed;
+    });
+
+    final SpoofResult flags =
+    await _service.getAntispoofingFlags(gps.position!);
     if (!mounted) return;
 
     final deviceId = await _repository.getDeviceUniqueId();
@@ -135,11 +185,11 @@ class _CheckInScreenState extends State<CheckInScreen>
 
     debugPrint(
       '[CHECKIN] Sending payload location: '
-      'lat=${payload.latSmoothed}, '
-      'lng=${payload.lngSmoothed}, '
-      'accuracy=${payload.accuracyMetres}m, '
-      'timestampGps=${payload.timestampGps}, '
-      'timestampDevice=${payload.timestampDevice}',
+          'lat=${payload.latSmoothed}, '
+          'lng=${payload.lngSmoothed}, '
+          'accuracy=${payload.accuracyMetres}m, '
+          'timestampGps=${payload.timestampGps}, '
+          'timestampDevice=${payload.timestampDevice}',
     );
 
     if (isOffline) {
@@ -195,18 +245,34 @@ class _CheckInScreenState extends State<CheckInScreen>
     final detail = (e.response?.data?['detail'] as String?) ?? '';
     switch (status) {
       case 403:
-        if (detail.contains('Mock')) return 'Mock location detected. Disable location spoofing apps.';
-        if (detail.contains('Rooted')) return 'Rooted device detected. Cannot use app on rooted devices.';
-        if (detail.contains('not registered')) return 'Device not registered. Contact HR.';
+        if (detail.contains('Mock')) {
+          return 'Mock location detected. Disable location spoofing apps.';
+        }
+        if (detail.contains('Rooted')) {
+          return 'Rooted device detected. Cannot use app on rooted devices.';
+        }
+        if (detail.contains('not registered')) {
+          return 'Device not registered. Contact HR.';
+        }
         return detail.isNotEmpty ? detail : 'Access denied.';
       case 409:
         return 'You have already clocked ${_logType == 'OUT' ? 'out' : 'in'} today.';
       case 422:
-        if (detail.contains('geofence') || detail.contains('Outside')) return 'You are outside the office location.';
-        if (detail.contains('Wi-Fi') || detail.contains('RSSI')) return 'Office Wi-Fi not detected or signal too weak.';
-        if (detail.contains('Biometric')) return 'Biometric check failed.';
-        if (detail.contains('Timestamp') || detail.contains('implausible')) return 'Device clock is out of sync. Check your time settings.';
-        if (detail.contains('log type') || detail.contains('INVALID_LOG_TYPE')) return 'Cannot clock out without a prior clock in.';
+        if (detail.contains('geofence') || detail.contains('Outside')) {
+          return 'You are outside the office location.';
+        }
+        if (detail.contains('Wi-Fi') || detail.contains('RSSI')) {
+          return 'Office Wi-Fi not detected or signal too weak.';
+        }
+        if (detail.contains('Biometric')) {
+          return 'Biometric check failed.';
+        }
+        if (detail.contains('Timestamp') || detail.contains('implausible')) {
+          return 'Device clock is out of sync. Check your time settings.';
+        }
+        if (detail.contains('log type') || detail.contains('INVALID_LOG_TYPE')) {
+          return 'Cannot clock out without a prior clock in.';
+        }
         return detail.isNotEmpty ? detail : 'Verification failed.';
       case null:
         return 'No internet connection.';
@@ -220,8 +286,8 @@ class _CheckInScreenState extends State<CheckInScreen>
     final title = _resolving
         ? ''
         : (_step == _Step.done
-            ? (_logType == 'OUT' ? 'Clock Out Complete' : 'Clock In Complete')
-            : (_logType == 'OUT' ? 'Clock Out' : 'Clock In'));
+        ? (_logType == 'OUT' ? 'Clock Out Complete' : 'Clock In Complete')
+        : (_logType == 'OUT' ? 'Clock Out' : 'Clock In'));
 
     return Scaffold(
       backgroundColor: AppColors.splashBackground,
@@ -262,35 +328,50 @@ class _CheckInScreenState extends State<CheckInScreen>
   Widget _buildStepIcon() {
     if (_step == _Step.done) {
       return Container(
-        width: 100, height: 100,
+        width: 100,
+        height: 100,
         decoration: BoxDecoration(
           color: AppColors.securitySuccess.withValues(alpha: 0.15),
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.securitySuccess, width: 2),
         ),
-        child: const Icon(Icons.check_rounded, size: 52, color: AppColors.securitySuccess),
+        child: const Icon(
+          Icons.check_rounded,
+          size: 52,
+          color: AppColors.securitySuccess,
+        ),
       );
     }
     if (_step == _Step.queued) {
       return Container(
-        width: 100, height: 100,
+        width: 100,
+        height: 100,
         decoration: BoxDecoration(
           color: AppColors.securityWarning.withValues(alpha: 0.15),
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.securityWarning, width: 2),
         ),
-        child: const Icon(Icons.cloud_off_rounded, size: 52, color: AppColors.securityWarning),
+        child: const Icon(
+          Icons.cloud_off_rounded,
+          size: 52,
+          color: AppColors.securityWarning,
+        ),
       );
     }
     if (_step == _Step.failed) {
       return Container(
-        width: 100, height: 100,
+        width: 100,
+        height: 100,
         decoration: BoxDecoration(
           color: AppColors.securityError.withValues(alpha: 0.15),
           shape: BoxShape.circle,
           border: Border.all(color: AppColors.securityError, width: 2),
         ),
-        child: const Icon(Icons.close_rounded, size: 52, color: AppColors.securityError),
+        child: const Icon(
+          Icons.close_rounded,
+          size: 52,
+          color: AppColors.securityError,
+        ),
       );
     }
     return AnimatedBuilder(
@@ -298,7 +379,8 @@ class _CheckInScreenState extends State<CheckInScreen>
       builder: (context, child) =>
           Transform.scale(scale: _pulseAnimation.value, child: child),
       child: Container(
-        width: 100, height: 100,
+        width: 100,
+        height: 100,
         decoration: BoxDecoration(
           color: AppColors.onTertiaryContainer.withValues(alpha: 0.15),
           shape: BoxShape.circle,
@@ -310,18 +392,42 @@ class _CheckInScreenState extends State<CheckInScreen>
   }
 
   Widget _buildStepTitle() => Text(
-        _stepTitle(_step),
-        style: AppTextStyles.headlineLgMobile.copyWith(color: AppColors.onPrimary),
-        textAlign: TextAlign.center,
-      );
+    _stepTitle(_step),
+    style:
+    AppTextStyles.headlineLgMobile.copyWith(color: AppColors.onPrimary),
+    textAlign: TextAlign.center,
+  );
 
   Widget _buildStepSubtitle() => Text(
-        _stepSubtitle(_step),
-        style: AppTextStyles.bodyMd.copyWith(color: AppColors.inversePrimary),
-        textAlign: TextAlign.center,
-      );
+    _stepSubtitle(_step),
+    style: AppTextStyles.bodyMd.copyWith(color: AppColors.inversePrimary),
+    textAlign: TextAlign.center,
+  );
 
   Widget _buildStepList() {
+    final children = <Widget>[
+      _StepRow(
+        icon: Icons.fingerprint_rounded,
+        label: 'Biometric Verification',
+        state: _rowStateFromStatus(_bioStatus),
+      ),
+      const SizedBox(height: 16),
+      _StepRow(
+        icon: Icons.wifi_rounded,
+        label: 'Wi-Fi Credential Check',
+        state: _rowStateFromStatus(_wifiStatus),
+      ),
+    ];
+
+    children.add(const SizedBox(height: 16));
+    children.add(
+      _StepRow(
+        icon: Icons.my_location_rounded,
+        label: 'GPS Location Check',
+        state: _rowStateFromStatus(_gpsStatus),
+      ),
+    );
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -330,59 +436,73 @@ class _CheckInScreenState extends State<CheckInScreen>
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.onPrimary.withValues(alpha: 0.1)),
       ),
-      child: Column(
-        children: [
-          _StepRow(icon: Icons.fingerprint_rounded, label: 'Biometric Verification', state: _rowState(_Step.biometric)),
-          const SizedBox(height: 16),
-          _StepRow(icon: Icons.wifi_rounded, label: 'Wi-Fi Credential Check', state: _rowState(_Step.wifi)),
-          const SizedBox(height: 16),
-          _StepRow(icon: Icons.my_location_rounded, label: 'GPS Location Check', state: _rowState(_Step.gps)),
-        ],
-      ),
+      child: Column(children: children),
     );
   }
 
-  _RowState _rowState(_Step forStep) {
-    final order = [_Step.biometric, _Step.wifi, _Step.gps];
-    if (_step == _Step.done || _step == _Step.queued) return _RowState.success;
-    if (_step == _Step.failed) return _RowState.pending;
-    final currentIdx = order.indexOf(_step);
-    final stepIdx = order.indexOf(forStep);
-    if (stepIdx < currentIdx) return _RowState.success;
-    if (stepIdx == currentIdx) return _RowState.loading;
-    return _RowState.pending;
+  _RowState _rowStateFromStatus(_Status status) {
+    switch (status) {
+      case _Status.pending:
+        return _RowState.pending;
+      case _Status.loading:
+        return _RowState.loading;
+      case _Status.passed:
+        return _RowState.success;
+      case _Status.failed:
+        return _RowState.failed;
+    }
   }
 
   IconData _stepIcon(_Step step) {
     switch (step) {
-      case _Step.biometric: return Icons.fingerprint_rounded;
-      case _Step.wifi:      return Icons.wifi_rounded;
-      case _Step.gps:       return Icons.my_location_rounded;
-      case _Step.done:      return Icons.check_rounded;
-      case _Step.failed:    return Icons.close_rounded;
-      case _Step.queued:    return Icons.cloud_off_rounded;
+      case _Step.biometric:
+        return Icons.fingerprint_rounded;
+      case _Step.wifi:
+        return Icons.wifi_rounded;
+      case _Step.gps:
+        return Icons.my_location_rounded;
+      case _Step.done:
+        return Icons.check_rounded;
+      case _Step.failed:
+        return Icons.close_rounded;
+      case _Step.queued:
+        return Icons.cloud_off_rounded;
     }
   }
 
   String _stepTitle(_Step step) {
     switch (step) {
-      case _Step.biometric: return 'Verifying Identity';
-      case _Step.wifi:      return 'Checking Network';
-      case _Step.gps:       return 'Acquiring Location';
-      case _Step.done:      return _logType == 'OUT' ? 'Clocked Out Successfully' : 'Clocked In Successfully';
-      case _Step.failed:    return 'Verification Failed';
-      case _Step.queued:    return 'Saved Offline';
+      case _Step.biometric:
+        return 'Verifying Identity';
+      case _Step.wifi:
+        return 'Checking Network';
+      case _Step.gps:
+        return 'Acquiring Location';
+      case _Step.done:
+        return _logType == 'OUT'
+            ? 'Clocked Out Successfully'
+            : 'Clocked In Successfully';
+      case _Step.failed:
+        return 'Verification Failed';
+      case _Step.queued:
+        return 'Saved Offline';
     }
   }
 
   String _stepSubtitle(_Step step) {
     switch (step) {
-      case _Step.biometric: return 'Place your finger on the sensor\nor look at your phone';
-      case _Step.wifi:      return 'Confirming office network\ncredentials';
-      case _Step.gps:       return 'Confirming you are within\nthe office location';
-      case _Step.done:      return 'Your attendance has been\nrecorded successfully';
-      case _Step.failed:    return _failureReason ?? 'Please try again';
-      case _Step.queued:    return 'Your attendance will sync\nautomatically when back online';
+      case _Step.biometric:
+        return 'Place your finger on the sensor\nor look at your phone';
+      case _Step.wifi:
+        return 'Confirming office network\ncredentials';
+      case _Step.gps:
+        return 'Confirming you are within\nthe office location';
+      case _Step.done:
+        return 'Your attendance has been\nrecorded successfully';
+      case _Step.failed:
+        return _failureReason ?? 'Please try again';
+      case _Step.queued:
+        return 'Your attendance will sync\nautomatically when back online';
     }
   }
 }
@@ -390,7 +510,11 @@ class _CheckInScreenState extends State<CheckInScreen>
 enum _RowState { pending, loading, success, failed }
 
 class _StepRow extends StatelessWidget {
-  const _StepRow({required this.icon, required this.label, required this.state});
+  const _StepRow({
+    required this.icon,
+    required this.label,
+    required this.state,
+  });
 
   final IconData icon;
   final String label;
@@ -404,26 +528,47 @@ class _StepRow extends StatelessWidget {
     switch (state) {
       case _RowState.pending:
         color = AppColors.onPrimaryContainer;
-        trailing = const Icon(Icons.radio_button_unchecked, size: 20, color: AppColors.onPrimaryContainer);
+        trailing = const Icon(
+          Icons.radio_button_unchecked,
+          size: 20,
+          color: AppColors.onPrimaryContainer,
+        );
       case _RowState.loading:
         color = AppColors.onPrimary;
         trailing = const SizedBox(
-          width: 20, height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.secondaryFixed),
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.secondaryFixed,
+          ),
         );
       case _RowState.success:
         color = AppColors.securitySuccess;
-        trailing = const Icon(Icons.check_circle_rounded, size: 20, color: AppColors.securitySuccess);
+        trailing = const Icon(
+          Icons.check_circle_rounded,
+          size: 20,
+          color: AppColors.securitySuccess,
+        );
       case _RowState.failed:
         color = AppColors.securityError;
-        trailing = const Icon(Icons.cancel_rounded, size: 20, color: AppColors.securityError);
+        trailing = const Icon(
+          Icons.cancel_rounded,
+          size: 20,
+          color: AppColors.securityError,
+        );
     }
 
     return Row(
       children: [
         Icon(icon, size: 22, color: color),
         const SizedBox(width: 12),
-        Expanded(child: Text(label, style: AppTextStyles.bodyMd.copyWith(color: color))),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTextStyles.bodyMd.copyWith(color: color),
+          ),
+        ),
         trailing,
       ],
     );
