@@ -17,7 +17,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _employeeIdController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _hasEdited = false;
 
   @override
   void dispose() {
@@ -27,7 +26,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _onLogin() {
-    setState(() => _hasEdited = false);
     final employeeId = _employeeIdController.text.trim();
     final password = _passwordController.text.trim();
     if (employeeId.isEmpty || password.isEmpty) return;
@@ -171,7 +169,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _employeeIdController,
                       keyboardType: TextInputType.text,
                       autocorrect: false,
-                      onChanged: (_) => setState(() => _hasEdited = true),
                       enabled: !isLoading,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: AppColors.onBackground,
@@ -200,7 +197,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      onChanged: (_) => setState(() => _hasEdited = true),
                       enabled: !isLoading,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: AppColors.onBackground,
@@ -234,7 +230,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton.icon(
-                        onPressed: (isLoading || (authState.status == AuthStatus.error && !_hasEdited)) ? null : _onLogin,
+                        onPressed: isLoading ? null : _onLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryContainer,
                           foregroundColor: AppColors.onPrimary,
