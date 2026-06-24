@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 class AppTextStyles {
   AppTextStyles._();
@@ -10,7 +9,6 @@ class AppTextStyles {
     fontWeight: FontWeight.w700,
     height: 1.22,
     letterSpacing: -0.72,
-    color: Color(0xFF0B1C30),
   );
 
   static const TextStyle headlineLg = TextStyle(
@@ -19,7 +17,6 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     height: 1.29,
     letterSpacing: -0.28,
-    color: Color(0xFF0B1C30),
   );
 
   static const TextStyle headlineLgMobile = TextStyle(
@@ -27,7 +24,6 @@ class AppTextStyles {
     fontSize: 24,
     fontWeight: FontWeight.w700,
     height: 1.33,
-    color: Color(0xFF0B1C30),
   );
 
   static const TextStyle headlineMd = TextStyle(
@@ -35,7 +31,6 @@ class AppTextStyles {
     fontSize: 20,
     fontWeight: FontWeight.w600,
     height: 1.4,
-    color: Color(0xFF0B1C30),
   );
 
   static const TextStyle bodyLg = TextStyle(
@@ -43,7 +38,6 @@ class AppTextStyles {
     fontSize: 16,
     fontWeight: FontWeight.w400,
     height: 1.5,
-    color: Color(0xFF0B1C30),
   );
 
   static const TextStyle bodyMd = TextStyle(
@@ -51,7 +45,6 @@ class AppTextStyles {
     fontSize: 14,
     fontWeight: FontWeight.w400,
     height: 1.43,
-    color: Color(0xFF0B1C30),
   );
 
   static const TextStyle labelSm = TextStyle(
@@ -60,7 +53,6 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     height: 1.33,
     letterSpacing: 0.24,
-    color: Color(0xFF45464D),
   );
 
   static const TextStyle labelXs = TextStyle(
@@ -69,15 +61,14 @@ class AppTextStyles {
     fontWeight: FontWeight.w500,
     height: 1.4,
     letterSpacing: 0.5,
-    color: Color(0xFF45464D),
   );
 
-  // Legacy aliases
+  // Legacy aliases — no hardcoded colors; callers use .copyWith(color: ...) 
+  // or inherit color from DefaultTextStyle / Theme.
   static const TextStyle display = TextStyle(
     fontFamily: 'Inter',
     fontSize: 18,
     fontWeight: FontWeight.bold,
-    color: AppColors.onPrimary,
   );
 
   static const TextStyle heading = headlineMd;
@@ -88,6 +79,5 @@ class AppTextStyles {
     fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: FontWeight.bold,
-    color: AppColors.onPrimary,
   );
 }

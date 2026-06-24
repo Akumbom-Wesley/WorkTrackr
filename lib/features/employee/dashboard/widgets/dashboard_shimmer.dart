@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
 
 /// Skeleton loading placeholders while dashboard data is fetching.
 class DashboardShimmer extends StatefulWidget {
@@ -34,6 +33,7 @@ class _DashboardShimmerState extends State<DashboardShimmer>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return AnimatedBuilder(
       animation: _anim,
       builder: (_, __) => Opacity(
@@ -43,15 +43,15 @@ class _DashboardShimmerState extends State<DashboardShimmer>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _block(height: 130, radius: 12),
+              _block(cs, height: 130, radius: 12),
               const SizedBox(height: 16),
-              _block(height: 100, radius: 12),
+              _block(cs, height: 100, radius: 12),
               const SizedBox(height: 16),
-              _block(height: 56, radius: 12),
+              _block(cs, height: 56, radius: 12),
               const SizedBox(height: 24),
-              _block(height: 14, width: 120, radius: 4),
+              _block(cs, height: 14, width: 120, radius: 4),
               const SizedBox(height: 12),
-              _block(height: 110, radius: 12),
+              _block(cs, height: 110, radius: 12),
             ],
           ),
         ),
@@ -59,7 +59,8 @@ class _DashboardShimmerState extends State<DashboardShimmer>
     );
   }
 
-  Widget _block({
+  Widget _block(
+    ColorScheme cs, {
     required double height,
     double? width,
     double radius = 8,
@@ -68,7 +69,7 @@ class _DashboardShimmerState extends State<DashboardShimmer>
       width: width ?? double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
+        color: cs.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(radius),
       ),
     );

@@ -198,24 +198,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 animation: _pulse2,
                 builder: (context, _) => _buildPulseRing(_pulse2.value),
               ),
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceBase,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.security,
-                  size: 36,
-                  color: AppColors.primaryContainer,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/worktrackr.png',
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
                 ),
               ),
             ],

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
 /// Full-screen error state shown when dashboard fetch fails.
@@ -15,6 +14,7 @@ class DashboardErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -25,13 +25,13 @@ class DashboardErrorView extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.errorContainer,
+                color: cs.errorContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.cloud_off_rounded,
                 size: 32,
-                color: AppColors.onErrorContainer,
+                color: cs.onErrorContainer,
               ),
             ),
             const SizedBox(height: 20),
@@ -44,7 +44,7 @@ class DashboardErrorView extends StatelessWidget {
             Text(
               message,
               style: AppTextStyles.bodyMd.copyWith(
-                color: AppColors.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -55,8 +55,8 @@ class DashboardErrorView extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onRetry,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryContainer,
-                  foregroundColor: AppColors.onPrimary,
+                  backgroundColor: cs.primaryContainer,
+                  foregroundColor: cs.onPrimary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),

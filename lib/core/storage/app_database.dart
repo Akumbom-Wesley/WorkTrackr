@@ -48,6 +48,13 @@ class AppDatabase {
             queued_at  TEXT NOT NULL
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE app_settings (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+          )
+        ''');
       },
     );
   }

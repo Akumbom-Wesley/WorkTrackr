@@ -60,6 +60,7 @@ class _HoursSummaryGridState extends State<HoursSummaryGrid> {
     final d = end.difference(clockIn);
     return d.isNegative ? Duration.zero : d;
   }
+
   @override
   Widget build(BuildContext context) {
     return GridView.count(
@@ -131,12 +132,13 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceBase,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceMuted),
+        border: Border.all(color: cs.surfaceContainerHighest),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +147,7 @@ class _StatCard extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.labelXs.copyWith(
-              color: AppColors.outline,
+              color: cs.outline,
             ),
           ),
           Column(
@@ -161,7 +163,7 @@ class _StatCard extends StatelessWidget {
               Text(
                 sub,
                 style: AppTextStyles.labelXs.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
             ],
@@ -182,16 +184,17 @@ class _StatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _configFor(status);
+    final cs = Theme.of(context).colorScheme;
+    final config = _configFor(cs, status);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceBase,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.surfaceMuted),
+          border: Border.all(color: cs.surfaceContainerHighest),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +203,7 @@ class _StatusCard extends StatelessWidget {
             Text(
               'CURRENT STATUS',
               style: AppTextStyles.labelXs.copyWith(
-                color: AppColors.outline,
+                color: cs.outline,
               ),
             ),
             Row(
@@ -219,7 +222,7 @@ class _StatusCard extends StatelessWidget {
                     config.label,
                     style: AppTextStyles.bodyMd.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.onBackground,
+                      color: cs.onSurface,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -232,22 +235,22 @@ class _StatusCard extends StatelessWidget {
     );
   }
 
-  _StatusConfig _configFor(String? status) {
+  _StatusConfig _configFor(ColorScheme cs, String? status) {
     switch (status) {
       case 'present':
-        return const _StatusConfig('Present', AppColors.securitySuccess);
+        return _StatusConfig('Present', AppColors.securitySuccess);
       case 'break':
-        return const _StatusConfig('On Break', AppColors.securityWarning);
+        return _StatusConfig('On Break', AppColors.securityWarning);
       case 'errand':
-        return const _StatusConfig('On Errand', AppColors.onTertiaryContainer);
+        return _StatusConfig('On Errand', cs.onTertiaryContainer);
       case 'assignment':
-        return const _StatusConfig('On Assignment', Color(0xFF7C3AED));
+        return _StatusConfig('On Assignment', const Color(0xFF7C3AED));
       case 'checked_out':
-        return const _StatusConfig('Checked Out', AppColors.outline);
+        return _StatusConfig('Checked Out', cs.outline);
       case 'absent':
-        return const _StatusConfig('Absent', AppColors.error);
+        return _StatusConfig('Absent', cs.error);
       default:
-        return const _StatusConfig('Off-Duty', AppColors.outline);
+        return _StatusConfig('Off-Duty', cs.outline);
     }
   }
 }
