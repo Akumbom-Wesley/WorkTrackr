@@ -17,11 +17,10 @@ class SyncService {
   StreamSubscription<List<ConnectivityResult>>? _subscription;
   bool _syncing = false;
 
-  /// Call once from main() after Hive is initialised.
+  /// Call once from main().
   void start() {
-    _subscription = Connectivity()
-        .onConnectivityChanged
-        .listen((results) async {
+    _subscription =
+        Connectivity().onConnectivityChanged.listen((results) async {
       final online = results.any((r) =>
           r == ConnectivityResult.wifi ||
           r == ConnectivityResult.mobile ||
@@ -39,16 +38,16 @@ class SyncService {
   Future<SyncResult> syncNow() async {
     if (_syncing) return SyncResult.skipped;
     final queue = CheckinQueue.instance;
-    if (queue.isEmpty) return SyncResult.empty;
+    if (await queue.isEmpty) return SyncResult.empty;
 
     _syncing = true;
     try {
-      final items = queue.getAll();
+      final items = await queue.getAll();
       final batch = items.map((e) => e.toSyncJson()).toList();
 
       final response = await _dio.post<dynamic>(
         _syncEndpoint,
-        data: batch,
+        data: {'records': batch},
         options: Options(validateStatus: (s) => (s ?? 0) < 500),
       );
 

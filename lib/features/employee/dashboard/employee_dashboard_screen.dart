@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -177,10 +178,25 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   String _friendlyError(Object err) {
+    if (err is DioException) {
+      switch (err.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return 'No internet connection. Please check your network.';
+        case DioExceptionType.badResponse:
+          if (err.response?.statusCode == 401) {
+            return 'Your session has expired. Please log in again.';
+          }
+          return 'Something went wrong. Please try again.';
+        default:
+          break;
+      }
+    }
+
     final msg = err.toString();
-    if (msg.contains('SocketException') ||
-        msg.contains('ConnectionError') ||
-        msg.contains('connection')) {
+    if (msg.contains('SocketException')) {
       return 'No internet connection. Please check your network.';
     }
     if (msg.contains('401') || msg.contains('Unauthorized')) {

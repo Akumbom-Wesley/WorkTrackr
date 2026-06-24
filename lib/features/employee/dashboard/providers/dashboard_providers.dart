@@ -14,10 +14,43 @@ class DashboardNotifier extends AsyncNotifier<DashboardData> {
   @override
   Future<DashboardData> build() => _load();
 
-  Future<DashboardData> _load() =>
-      ref.read(dashboardRepositoryProvider).fetchAll();
+  /// Subscribes to the cache-then-network stream. Each emission updates
+  /// state immediately (cached data first, then fresh data once the
+  /// network call resolves). Returns once the stream completes.
+  Future<DashboardData> _load() async {
+    DashboardData? latest;
+    Object? streamError;
+    StackTrace? streamStackTrace;
 
-  /// Pull-to-refresh.
+    await ref
+        .read(dashboardRepositoryProvider)
+        .watchDashboard()
+        .listen(
+          (data) {
+            latest = data;
+            state = AsyncData(data);
+          },
+          onError: (error, stackTrace) {
+            streamError = error;
+            streamStackTrace = stackTrace as StackTrace;
+            state = AsyncError(error, stackTrace);
+          },
+        )
+        .asFuture<void>();
+
+    // Nothing was ever cached and the network call failed too — rethrow
+    // the original error so the UI's error message reflects the real
+    // cause (e.g. no connection) rather than a generic failure.
+    if (latest == null) {
+      throw Error.throwWithStackTrace(
+        streamError ?? StateError('Dashboard stream completed with no data'),
+        streamStackTrace ?? StackTrace.current,
+      );
+    }
+    return latest!;
+  }
+
+  /// Pull-to-refresh / retry button.
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(_load);

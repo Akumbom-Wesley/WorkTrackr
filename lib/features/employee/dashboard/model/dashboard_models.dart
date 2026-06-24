@@ -185,9 +185,14 @@ class DashboardData {
   final EmployeeStatusResponse employeeStatus;
   final TodaySummary todaySummary;
 
+  /// True when this data came from the local cache rather than a fresh
+  /// network response (e.g. while offline).
+  final bool isFromCache;
+
   const DashboardData({
     required this.me,
     required this.employeeStatus,
     required this.todaySummary,
+    this.isFromCache = false,
   });
 }
