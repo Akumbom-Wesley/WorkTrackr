@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 /// Shared drawer for Employee role.
@@ -26,8 +25,9 @@ class WorkTrackrDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Drawer(
-      backgroundColor: AppColors.surfaceContainerLow,
+      backgroundColor: cs.surface,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,8 +36,8 @@ class WorkTrackrDrawer extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: AppColors.primaryContainer,
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,12 +46,12 @@ class WorkTrackrDrawer extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.secondary,
+                      color: cs.secondary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.person_rounded,
-                      color: AppColors.onPrimary,
+                      color: cs.onPrimary,
                       size: 28,
                     ),
                   ),
@@ -59,14 +59,14 @@ class WorkTrackrDrawer extends StatelessWidget {
                   Text(
                     fullName ?? 'Employee',
                     style: AppTextStyles.headlineMd.copyWith(
-                      color: AppColors.onPrimary,
+                      color: cs.onPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     employeeId ?? '',
                     style: AppTextStyles.labelSm.copyWith(
-                      color: AppColors.onPrimaryContainer,
+                      color: cs.onPrimaryContainer,
                     ),
                   ),
                 ],
@@ -109,12 +109,12 @@ class WorkTrackrDrawer extends StatelessWidget {
             ),
 
             const Spacer(),
-            const Divider(color: AppColors.surfaceMuted),
+            Divider(color: cs.outlineVariant),
 
             _DrawerItem(
               icon: Icons.logout_rounded,
               label: 'Sign Out',
-              color: AppColors.error,
+              color: cs.error,
               onTap: () {
                 Navigator.pop(context);
                 onLogoutTap?.call();
@@ -144,7 +144,7 @@ class _DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppColors.onBackground;
+    final c = color ?? Theme.of(context).colorScheme.onSurface;
     return ListTile(
       leading: Icon(icon, color: c, size: 22),
       title: Text(

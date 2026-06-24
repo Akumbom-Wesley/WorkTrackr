@@ -30,20 +30,20 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surfaceBase,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryContainer,
-        foregroundColor: AppColors.onPrimary,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text(
           'Offline Queue',
-          style: AppTextStyles.headlineMd.copyWith(color: AppColors.onPrimary),
+          style: AppTextStyles.headlineMd.copyWith(color: Theme.of(context).colorScheme.onPrimary),
         ),
         centerTitle: true,
         actions: const [],
       ),
       body: RefreshIndicator(
         onRefresh: () async => _reload(),
-        color: AppColors.secondary,
+        color: Theme.of(context).colorScheme.secondary,
         child: _items.isEmpty ? _buildEmpty() : _buildList(),
       ),
     );
@@ -61,26 +61,26 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.cloud_done_rounded,
                   size: 40,
-                  color: AppColors.secondary,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
               ),
               const SizedBox(height: 20),
               Text(
                 'All synced',
                 style: AppTextStyles.headlineMd
-                    .copyWith(color: AppColors.onBackground),
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface),
               ),
               const SizedBox(height: 8),
               Text(
                 'No pending check-ins in the queue.',
                 style: AppTextStyles.bodyMd
-                    .copyWith(color: AppColors.onSurfaceVariant),
+                    .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -121,9 +121,9 @@ class _QueueCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.outline.withValues(alpha: 0.15)),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +132,7 @@ class _QueueCard extends StatelessWidget {
             children: [
               _Chip(
                 label: isIn ? 'CLOCK IN' : 'CLOCK OUT',
-                color: isIn ? AppColors.secondary : AppColors.securityError,
+                color: isIn ? Theme.of(context).colorScheme.secondary : AppColors.securityError,
               ),
               const Spacer(),
               _Chip(
@@ -149,7 +149,7 @@ class _QueueCard extends StatelessWidget {
             Icons.access_time_rounded,
             time,
             bold: true,
-            color: AppColors.onBackground,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
           const SizedBox(height: 6),
           _InfoRow(Icons.location_on_rounded, '$lat, $lng'),
@@ -229,13 +229,13 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppColors.onSurfaceVariant),
+        Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
             style: AppTextStyles.labelSm.copyWith(
-              color: color ?? AppColors.onSurfaceVariant,
+              color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: bold ? FontWeight.w600 : FontWeight.w500,
             ),
           ),

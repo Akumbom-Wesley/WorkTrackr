@@ -3,8 +3,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../model/dashboard_models.dart';
 
-/// Card showing Clock In time, Clock Out time, and hours worked today.
-/// Spec §2.4: Today Summary Card.
 class TodaySummaryCard extends StatelessWidget {
   const TodaySummaryCard({super.key, required this.summary});
 
@@ -12,13 +10,14 @@ class TodaySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceBase,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceMuted),
+        border: Border.all(color: cs.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -31,10 +30,8 @@ class TodaySummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'TODAY\'S SUMMARY',
-            style: AppTextStyles.labelXs.copyWith(
-              color: AppColors.outline,
-            ),
+            "TODAY'S SUMMARY",
+            style: AppTextStyles.labelXs.copyWith(color: cs.outline),
           ),
           const SizedBox(height: 16),
           Row(
@@ -49,22 +46,22 @@ class TodaySummaryCard extends StatelessWidget {
                       : '--:--',
                 ),
               ),
-              _verticalDivider(),
+              _VerticalDivider(),
               Expanded(
                 child: _StatCell(
                   icon: Icons.logout_rounded,
-                  iconColor: AppColors.outline,
+                  iconColor: cs.outline,
                   label: 'Clock Out',
                   value: summary.clockOut != null
                       ? _formatTime(summary.clockOut!)
                       : '--:--',
                 ),
               ),
-              _verticalDivider(),
+              _VerticalDivider(),
               Expanded(
                 child: _StatCell(
                   icon: Icons.schedule_rounded,
-                  iconColor: AppColors.onTertiaryContainer,
+                  iconColor: cs.onTertiaryContainer,
                   label: 'Hours',
                   value: _formatDuration(summary.hoursWorked),
                 ),
@@ -76,13 +73,6 @@ class TodaySummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _verticalDivider() => Container(
-    width: 1,
-    height: 48,
-    color: AppColors.surfaceMuted,
-    margin: const EdgeInsets.symmetric(horizontal: 8),
-  );
-
   String _formatTime(DateTime dt) {
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
@@ -93,6 +83,18 @@ class TodaySummaryCard extends StatelessWidget {
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
     return '${h}h ${m.toString().padLeft(2, '0')}m';
+  }
+}
+
+class _VerticalDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 48,
+      color: Theme.of(context).colorScheme.outlineVariant,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+    );
   }
 }
 
@@ -111,6 +113,7 @@ class _StatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
         Icon(icon, size: 20, color: iconColor),
@@ -125,9 +128,7 @@ class _StatCell extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: AppTextStyles.labelXs.copyWith(
-            color: AppColors.outline,
-          ),
+          style: AppTextStyles.labelXs.copyWith(color: cs.outline),
         ),
       ],
     );
