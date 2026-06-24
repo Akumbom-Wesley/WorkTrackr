@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -18,22 +17,26 @@ class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
+      SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
       ),
     );
 
     return AppBar(
-      backgroundColor: AppColors.background,
+      backgroundColor: cs.surface,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       titleSpacing: 4,
       leading: IconButton(
-        icon: const Icon(
+        icon: Icon(
           Icons.grid_view_rounded,
-          color: AppColors.onSurfaceVariant,
+          color: cs.onSurfaceVariant,
           size: 24,
         ),
         onPressed: () => scaffoldKey.currentState?.openDrawer(),
@@ -41,17 +44,13 @@ class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       title: Row(
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: AppColors.primaryContainer,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Icon(
-              Icons.security,
-              size: 16,
-              color: AppColors.onPrimary,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Image.asset(
+              'assets/images/worktrackr.png',
+              width: 28,
+              height: 28,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(width: 8),
@@ -59,7 +58,7 @@ class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
             'WorkTrackr',
             style: AppTextStyles.headlineMd.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.onBackground,
+              color: cs.onSurface,
             ),
           ),
         ],
@@ -67,18 +66,18 @@ class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: actions ??
           [
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.notifications_outlined,
-                color: AppColors.onSurfaceVariant,
+                color: cs.onSurfaceVariant,
               ),
               onPressed: () {},
               tooltip: 'Notifications',
             ),
             const SizedBox(width: 4),
           ],
-      bottom: const PreferredSize(
-        preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1, color: AppColors.surfaceMuted),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(height: 1, color: cs.outlineVariant),
       ),
     );
   }

@@ -3,9 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_text_styles.dart';
 import 'models/queued_checkin.dart';
-import 'providers/offline_providers.dart';
 import 'queue/checkin_queue.dart';
-import 'sync/sync_service.dart';
 
 class OfflineQueueScreen extends ConsumerStatefulWidget {
   const OfflineQueueScreen({super.key});
@@ -16,8 +14,6 @@ class OfflineQueueScreen extends ConsumerStatefulWidget {
 
 class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
   List<QueuedCheckin> _items = [];
-  bool _syncing = false;
-  String? _lastSyncMessage;
 
   @override
   void initState() {
@@ -25,63 +21,29 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
     _reload();
   }
 
-  void _reload() {
-    setState(() => _items = CheckinQueue.instance.getAll());
-  }
-
-  Future<void> _syncNow() async {
-    if (_syncing) return;
-    setState(() { _syncing = true; _lastSyncMessage = null; });
-    final result = await SyncService.instance.syncNow();
+  Future<void> _reload() async {
+    final items = await CheckinQueue.instance.getAll();
     if (!mounted) return;
-    setState(() {
-      _syncing = false;
-      switch (result) {
-        case SyncResult.success:
-          _lastSyncMessage = 'All records synced successfully.';
-        case SyncResult.empty:
-          _lastSyncMessage = 'Queue is already empty.';
-        case SyncResult.failed:
-          _lastSyncMessage = 'Sync failed. Check your connection and retry.';
-        case SyncResult.skipped:
-          _lastSyncMessage = 'Sync already in progress.';
-      }
-      _reload();
-    });
-    ref.invalidate(queueCountProvider);
+    setState(() => _items = items);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.surfaceBase,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryContainer,
-        foregroundColor: AppColors.onPrimary,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text(
           'Offline Queue',
-          style: AppTextStyles.headlineMd.copyWith(color: AppColors.onPrimary),
+          style: AppTextStyles.headlineMd.copyWith(color: Theme.of(context).colorScheme.onPrimary),
         ),
         centerTitle: true,
-        actions: [
-          if (_items.isNotEmpty)
-            IconButton(
-              icon: _syncing
-                  ? const SizedBox(
-                      width: 20, height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.onPrimary,
-                      ),
-                    )
-                  : const Icon(Icons.sync_rounded),
-              onPressed: _syncing ? null : _syncNow,
-              tooltip: 'Sync now',
-            ),
-        ],
+        actions: const [],
       ),
       body: RefreshIndicator(
         onRefresh: () async => _reload(),
-        color: AppColors.secondary,
+        color: Theme.of(context).colorScheme.secondary,
         child: _items.isEmpty ? _buildEmpty() : _buildList(),
       ),
     );
@@ -96,26 +58,29 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 80, height: 80,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.1),
+                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.cloud_done_rounded,
                   size: 40,
-                  color: AppColors.secondary,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
               ),
               const SizedBox(height: 20),
-              Text('All synced',
-                  style: AppTextStyles.headlineMd
-                      .copyWith(color: AppColors.onBackground)),
+              Text(
+                'All synced',
+                style: AppTextStyles.headlineMd
+                    .copyWith(color: Theme.of(context).colorScheme.onSurface),
+              ),
               const SizedBox(height: 8),
               Text(
                 'No pending check-ins in the queue.',
                 style: AppTextStyles.bodyMd
-                    .copyWith(color: AppColors.onSurfaceVariant),
+                    .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -125,96 +90,11 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
   }
 
   Widget _buildList() {
-    return Column(
-      children: [
-        // Pending banner
-        Container(
-          width: double.infinity,
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppColors.securityWarning.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: AppColors.securityWarning.withValues(alpha: 0.3)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.cloud_off_rounded,
-                  color: AppColors.securityWarning, size: 20),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  '${_items.length} record${_items.length == 1 ? '' : 's'} pending sync',
-                  style: AppTextStyles.bodyMd.copyWith(
-                    color: AppColors.securityWarning,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Sync result message
-        if (_lastSyncMessage != null)
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: _lastSyncMessage!.contains('success')
-                  ? AppColors.securitySuccess.withValues(alpha: 0.1)
-                  : AppColors.errorContainer,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              _lastSyncMessage!,
-              style: AppTextStyles.labelSm.copyWith(
-                color: _lastSyncMessage!.contains('success')
-                    ? AppColors.securitySuccess
-                    : AppColors.onErrorContainer,
-              ),
-            ),
-          ),
-
-        // List
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-            itemCount: _items.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (_, i) => _QueueCard(item: _items[i]),
-          ),
-        ),
-
-        // Sync button
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-          child: FilledButton.icon(
-            onPressed: _syncing ? null : _syncNow,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              minimumSize: const Size(double.infinity, 52),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-            ),
-            icon: _syncing
-                ? const SizedBox(
-                    width: 18, height: 18,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white),
-                  )
-                : const Icon(Icons.sync_rounded, color: Colors.white),
-            label: Text(
-              _syncing ? 'Syncing…' : 'Sync Now',
-              style: AppTextStyles.bodyMd.copyWith(
-                  color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-      ],
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+      itemCount: _items.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, i) => _QueueCard(item: _items[i]),
     );
   }
 }
@@ -227,24 +107,23 @@ class _QueueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p       = item.payload;
-    final isIn    = (p['log_type'] as String? ?? 'IN') == 'IN';
-    final lat     = p['gps_lat_smoothed'] as String? ?? '--';
-    final lng     = p['gps_lng_smoothed'] as String? ?? '--';
-    final band    = p['wifi_band'] as String? ?? 'UNAVAILABLE';
-    final ssid    = p['wifi_ssid'] as String? ?? '';
-    final tsRaw   = p['timestamp_device'] as String?;
-    final dt      = tsRaw != null ? DateTime.parse(tsRaw).toLocal() : null;
-    final time    = dt != null ? _fmt(dt, time: true)  : '--';
-    final date    = dt != null ? _fmt(dt, time: false) : '--';
+    final p = item.payload;
+    final isIn = (p['log_type'] as String? ?? 'IN') == 'IN';
+    final lat = p['gps_lat_smoothed'] as String? ?? '--';
+    final lng = p['gps_lng_smoothed'] as String? ?? '--';
+    final band = p['wifi_band'] as String? ?? 'UNAVAILABLE';
+    final ssid = p['wifi_ssid'] as String? ?? '';
+    final tsRaw = p['timestamp_device'] as String?;
+    final dt = tsRaw != null ? DateTime.parse(tsRaw).toLocal() : null;
+    final time = dt != null ? _fmt(dt, time: true) : '--';
+    final date = dt != null ? _fmt(dt, time: false) : '--';
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-            color: AppColors.outline.withValues(alpha: 0.15)),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,7 +132,7 @@ class _QueueCard extends StatelessWidget {
             children: [
               _Chip(
                 label: isIn ? 'CLOCK IN' : 'CLOCK OUT',
-                color: isIn ? AppColors.secondary : AppColors.securityError,
+                color: isIn ? Theme.of(context).colorScheme.secondary : AppColors.securityError,
               ),
               const Spacer(),
               _Chip(
@@ -266,13 +145,19 @@ class _QueueCard extends StatelessWidget {
           const SizedBox(height: 14),
           _InfoRow(Icons.calendar_today_rounded, date),
           const SizedBox(height: 6),
-          _InfoRow(Icons.access_time_rounded, time,
-              bold: true, color: AppColors.onBackground),
+          _InfoRow(
+            Icons.access_time_rounded,
+            time,
+            bold: true,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           const SizedBox(height: 6),
           _InfoRow(Icons.location_on_rounded, '$lat, $lng'),
           const SizedBox(height: 6),
-          _InfoRow(Icons.wifi_rounded,
-              ssid.isNotEmpty ? '$ssid ($band)' : band),
+          _InfoRow(
+            Icons.wifi_rounded,
+            ssid.isNotEmpty ? '$ssid ($band)' : band,
+          ),
         ],
       ),
     );
@@ -283,8 +168,20 @@ class _QueueCard extends StatelessWidget {
       return '${dt.hour.toString().padLeft(2, '0')}:'
           '${dt.minute.toString().padLeft(2, '0')}';
     }
-    const m = ['Jan','Feb','Mar','Apr','May','Jun',
-                'Jul','Aug','Sep','Oct','Nov','Dec'];
+    const m = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${m[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 }
@@ -310,9 +207,11 @@ class _Chip extends StatelessWidget {
             Icon(icon, size: 12, color: color),
             const SizedBox(width: 4),
           ],
-          Text(label,
-              style: AppTextStyles.labelXs
-                  .copyWith(color: color, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: AppTextStyles.labelXs
+                .copyWith(color: color, fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );
@@ -320,8 +219,7 @@ class _Chip extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  const _InfoRow(this.icon, this.text,
-      {this.bold = false, this.color});
+  const _InfoRow(this.icon, this.text, {this.bold = false, this.color});
   final IconData icon;
   final String text;
   final bool bold;
@@ -331,13 +229,13 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: AppColors.onSurfaceVariant),
+        Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
             style: AppTextStyles.labelSm.copyWith(
-              color: color ?? AppColors.onSurfaceVariant,
+              color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: bold ? FontWeight.w600 : FontWeight.w500,
             ),
           ),

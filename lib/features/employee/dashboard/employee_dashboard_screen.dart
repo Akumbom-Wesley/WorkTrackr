@@ -1,11 +1,14 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/router/app_router.dart';
 import '../../auth/auth_provider.dart';
+import '../../employee/history/employee_history_screen.dart';
+import '../../employee/profile/employee_profile_screen.dart';
+import '../../employee/queue/employee_queue_screen.dart';
 import '../../../shared/widgets/worktrackr_app_bar.dart';
 import '../../../shared/widgets/worktrackr_drawer.dart';
 import 'providers/dashboard_providers.dart';
@@ -48,41 +51,35 @@ class _EmployeeDashboardScreenState
       item: ItemConfig(
         icon: const Icon(Icons.dashboard_rounded),
         title: 'Dashboard',
-        activeForegroundColor: AppColors.secondary,
-        inactiveForegroundColor: AppColors.onSurfaceVariant,
+        activeForegroundColor: Theme.of(context).colorScheme.secondary,
+        inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
     PersistentTabConfig(
-      screen: const Scaffold(
-        body: Center(child: Text('History — Coming Soon')),
-      ),
+      screen: const EmployeeHistoryScreen(),
       item: ItemConfig(
         icon: const Icon(Icons.history_rounded),
         title: 'History',
-        activeForegroundColor: AppColors.secondary,
-        inactiveForegroundColor: AppColors.onSurfaceVariant,
+        activeForegroundColor: Theme.of(context).colorScheme.secondary,
+        inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
     PersistentTabConfig(
-      screen: const Scaffold(
-        body: Center(child: Text('Records — Coming Soon')),
-      ),
+      screen: const EmployeeQueueScreen(),
       item: ItemConfig(
-        icon: const Icon(Icons.rule_rounded),
-        title: 'Records',
-        activeForegroundColor: AppColors.secondary,
-        inactiveForegroundColor: AppColors.onSurfaceVariant,
+        icon: const Icon(Icons.pending_actions_rounded),
+        title: 'Queue',
+        activeForegroundColor: Theme.of(context).colorScheme.secondary,
+        inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
     PersistentTabConfig(
-      screen: const Scaffold(
-        body: Center(child: Text('Profile — Coming Soon')),
-      ),
+      screen: const EmployeeProfileScreen(),
       item: ItemConfig(
         icon: const Icon(Icons.person_rounded),
         title: 'Profile',
-        activeForegroundColor: AppColors.secondary,
-        inactiveForegroundColor: AppColors.onSurfaceVariant,
+        activeForegroundColor: Theme.of(context).colorScheme.secondary,
+        inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     ),
   ];
@@ -113,8 +110,8 @@ class _EmployeeDashboardScreenState
         tabs: _tabs(),
         navBarBuilder: (navBarConfig) => Style1BottomNavBar(
           navBarConfig: navBarConfig,
-          navBarDecoration: const NavBarDecoration(
-            color: AppColors.surfaceBase,
+          navBarDecoration: NavBarDecoration(
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
@@ -140,8 +137,8 @@ class _DashboardTab extends ConsumerWidget {
         onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
       ),
       data: (data) => RefreshIndicator(
-        color: AppColors.secondary,
-        backgroundColor: AppColors.surfaceBase,
+        color: Theme.of(context).colorScheme.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -177,10 +174,25 @@ class _DashboardTab extends ConsumerWidget {
   }
 
   String _friendlyError(Object err) {
+    if (err is DioException) {
+      switch (err.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return 'No internet connection. Please check your network.';
+        case DioExceptionType.badResponse:
+          if (err.response?.statusCode == 401) {
+            return 'Your session has expired. Please log in again.';
+          }
+          return 'Something went wrong. Please try again.';
+        default:
+          break;
+      }
+    }
+
     final msg = err.toString();
-    if (msg.contains('SocketException') ||
-        msg.contains('ConnectionError') ||
-        msg.contains('connection')) {
+    if (msg.contains('SocketException')) {
       return 'No internet connection. Please check your network.';
     }
     if (msg.contains('401') || msg.contains('Unauthorized')) {

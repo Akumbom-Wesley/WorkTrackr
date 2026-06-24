@@ -53,10 +53,11 @@ class _GreetingCardState extends State<GreetingCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer,
+        color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -189,6 +190,7 @@ class _TopRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,7 +198,7 @@ class _TopRow extends StatelessWidget {
         Text(
           isCurrentlyIn ? 'CLOCKED IN AT' : (clockInTime != null ? 'CLOCKED OUT' : 'NOT CLOCKED IN'),
           style: AppTextStyles.labelXs.copyWith(
-            color: AppColors.onPrimaryContainer,
+            color: cs.onPrimaryContainer,
           ),
         ),
         Column(
@@ -205,7 +207,7 @@ class _TopRow extends StatelessWidget {
             Text(
               _formatTime(now),
               style: AppTextStyles.headlineMd.copyWith(
-                color: AppColors.onPrimary,
+                color: cs.onPrimary,
                 fontFamily: 'JetBrainsMono',
                 fontWeight: FontWeight.w700,
               ),
@@ -213,7 +215,7 @@ class _TopRow extends StatelessWidget {
             Text(
               clockInTime != null ? _formatClockIn(clockInTime!) : _formatDate(now),
               style: AppTextStyles.labelXs.copyWith(
-                color: AppColors.onPrimaryContainer,
+                color: cs.onPrimaryContainer,
               ),
             ),
           ],
@@ -252,6 +254,7 @@ class _GreetingText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final hour = DateTime.now().hour;
     final greeting = hour < 12
         ? 'Good Morning,'
@@ -265,7 +268,7 @@ class _GreetingText extends StatelessWidget {
         Text(
           '$greeting\n${me.displayFirstName}.',
           style: AppTextStyles.headlineLgMobile.copyWith(
-            color: AppColors.onPrimary,
+            color: cs.onPrimary,
             height: 1.2,
           ),
         ),
@@ -323,6 +326,7 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final Color fg;
     final Color bg;
     final Color border;
@@ -333,9 +337,9 @@ class _Chip extends StatelessWidget {
         bg = AppColors.securitySuccess.withValues(alpha: 0.15);
         border = AppColors.securitySuccess.withValues(alpha: 0.3);
       case _ChipState.pending:
-        fg = AppColors.onPrimaryContainer;
-        bg = AppColors.onPrimary.withValues(alpha: 0.08);
-        border = AppColors.onPrimaryContainer.withValues(alpha: 0.3);
+        fg = cs.onPrimaryContainer;
+        bg = cs.onPrimary.withValues(alpha: 0.08);
+        border = cs.onPrimaryContainer.withValues(alpha: 0.3);
       case _ChipState.error:
         fg = AppColors.securityError;
         bg = AppColors.securityError.withValues(alpha: 0.15);
@@ -374,6 +378,7 @@ class _ClockInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final label = isCheckedIn ? 'CLOCK OUT' : 'CLOCK IN';
     final icon = isCheckedIn ? Icons.logout_rounded : Icons.login_rounded;
 
@@ -383,8 +388,8 @@ class _ClockInButton extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.onPrimary,
-          foregroundColor: AppColors.primaryContainer,
+          backgroundColor: cs.onPrimary,
+          foregroundColor: cs.primaryContainer,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -394,7 +399,7 @@ class _ClockInButton extends StatelessWidget {
         label: Text(
           label,
           style: AppTextStyles.button.copyWith(
-            color: AppColors.primaryContainer,
+            color: cs.primaryContainer,
             fontSize: 15,
             letterSpacing: 0.5,
           ),

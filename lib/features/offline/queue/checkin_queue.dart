@@ -1,46 +1,59 @@
-import 'package:hive_flutter/hive_flutter.dart';
-import '../../../core/constants/app_constants.dart';
+import 'dart:convert';
+
+import 'package:sqflite/sqflite.dart';
+
+import '../../../core/storage/app_database.dart';
 import '../models/queued_checkin.dart';
 
-/// Thin wrapper around the Hive box for the offline check-in queue.
-/// Box must be opened before use — call [CheckinQueue.init()] in main().
+/// Thin DAO over the `checkin_queue` SQLite table.
+/// No init() call needed — AppDatabase opens lazily on first access.
 class CheckinQueue {
   CheckinQueue._();
   static final CheckinQueue instance = CheckinQueue._();
 
-  static const _boxName = AppConstants.checkinQueueBox;
-
-  Box get _box => Hive.box(_boxName);
-
-  static Future<void> init() async {
-    await Hive.openBox(_boxName);
-  }
+  static const _table = 'checkin_queue';
 
   /// Appends a [QueuedCheckin] to the local queue.
   Future<void> enqueue(QueuedCheckin item) async {
-    await _box.put(item.id, item.toHive());
+    final db = await AppDatabase.instance.database;
+    final payloadJson = jsonEncode(item.payload);
+    await db.insert(
+      _table,
+      item.toRow(payloadJson),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   /// Returns all queued items ordered by [queuedAt] ascending.
-  List<QueuedCheckin> getAll() {
-    return _box.values
-        .map((v) => QueuedCheckin.fromHive(v as Map))
-        .toList()
-      ..sort((a, b) => a.queuedAt.compareTo(b.queuedAt));
+  Future<List<QueuedCheckin>> getAll() async {
+    final db = await AppDatabase.instance.database;
+    final rows = await db.query(_table, orderBy: 'queued_at ASC');
+    return rows.map((row) {
+      final decodedPayload =
+          jsonDecode(row['payload'] as String) as Map<String, dynamic>;
+      return QueuedCheckin.fromRow(row, decodedPayload);
+    }).toList();
   }
 
   /// Number of items currently in the queue.
-  int get count => _box.length;
+  Future<int> get count async {
+    final db = await AppDatabase.instance.database;
+    final result =
+        await db.rawQuery('SELECT COUNT(*) AS c FROM $_table');
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
 
   /// Removes all items from the queue (call after successful sync).
   Future<void> clear() async {
-    await _box.clear();
+    final db = await AppDatabase.instance.database;
+    await db.delete(_table);
   }
 
   /// Removes a single item by [id] (for partial sync retry if needed).
   Future<void> remove(String id) async {
-    await _box.delete(id);
+    final db = await AppDatabase.instance.database;
+    await db.delete(_table, where: 'id = ?', whereArgs: [id]);
   }
 
-  bool get isEmpty => _box.isEmpty;
+  Future<bool> get isEmpty async => (await count) == 0;
 }

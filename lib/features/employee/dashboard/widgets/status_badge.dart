@@ -17,13 +17,13 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = _configFor(status);
+    final cs = Theme.of(context).colorScheme;
+    final config = _configFor(cs, status);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           color: config.background,
           borderRadius: BorderRadius.circular(999),
@@ -54,7 +54,7 @@ class StatusBadge extends StatelessWidget {
     );
   }
 
-  _BadgeConfig _configFor(String? status) {
+  _BadgeConfig _configFor(ColorScheme cs, String? status) {
     switch (status) {
       case 'present':
         return const _BadgeConfig(
@@ -73,12 +73,12 @@ class StatusBadge extends StatelessWidget {
           border: Color(0xFFFCD34D),
         );
       case 'errand':
-        return const _BadgeConfig(
+        return _BadgeConfig(
           label: 'On Errand',
-          dot: AppColors.onTertiaryContainer,
-          foreground: Color(0xFF1E3A8A),
-          background: Color(0xFFDBEAFE),
-          border: Color(0xFF93C5FD),
+          dot: cs.onTertiaryContainer,
+          foreground: const Color(0xFF1E3A8A),
+          background: const Color(0xFFDBEAFE),
+          border: const Color(0xFF93C5FD),
         );
       case 'assignment':
         return const _BadgeConfig(
@@ -89,28 +89,28 @@ class StatusBadge extends StatelessWidget {
           border: Color(0xFFC4B5FD),
         );
       case 'checked_out':
-        return const _BadgeConfig(
+        return _BadgeConfig(
           label: 'Checked Out',
-          dot: AppColors.outline,
-          foreground: AppColors.onSurfaceVariant,
-          background: AppColors.surfaceContainerLow,
-          border: AppColors.outlineVariant,
+          dot: cs.outline,
+          foreground: cs.onSurfaceVariant,
+          background: cs.surfaceContainerLow,
+          border: cs.outlineVariant,
         );
       case 'absent':
         return _BadgeConfig(
           label: 'Absent',
-          dot: AppColors.error,
-          foreground: AppColors.onErrorContainer,
-          background: AppColors.errorContainer,
-          border: AppColors.error.withValues(alpha: 0.4),
+          dot: cs.error,
+          foreground: cs.onErrorContainer,
+          background: cs.errorContainer,
+          border: cs.error.withValues(alpha: 0.4),
         );
       default:
-        return const _BadgeConfig(
+        return _BadgeConfig(
           label: 'No Status',
-          dot: AppColors.outline,
-          foreground: AppColors.onSurfaceVariant,
-          background: AppColors.surfaceMuted,
-          border: AppColors.outlineVariant,
+          dot: cs.outline,
+          foreground: cs.onSurfaceVariant,
+          background: cs.surfaceContainerLow,
+          border: cs.outlineVariant,
         );
     }
   }

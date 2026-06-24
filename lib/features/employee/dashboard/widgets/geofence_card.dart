@@ -60,7 +60,6 @@ class _GeofenceCardState extends State<GeofenceCard> {
         return;
       }
 
-      // Wait for a fix with accuracy better than 10m (max 10 readings)
       Position? best;
       int attempts = 0;
       await for (final pos in Geolocator.getPositionStream(
@@ -104,11 +103,12 @@ class _GeofenceCardState extends State<GeofenceCard> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceBase,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceMuted),
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,10 +118,10 @@ class _GeofenceCardState extends State<GeofenceCard> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('YOUR LOCATION', style: AppTextStyles.labelXs.copyWith(color: AppColors.outline)),
+                Text('YOUR LOCATION', style: AppTextStyles.labelXs.copyWith(color: cs.outline)),
                 GestureDetector(
                   onTap: _fetchLocation,
-                  child: const Icon(Icons.my_location_rounded, size: 18, color: AppColors.onSurfaceVariant),
+                  child: Icon(Icons.my_location_rounded, size: 18, color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -133,11 +133,11 @@ class _GeofenceCardState extends State<GeofenceCard> {
               height: 180,
               child: _position == null
                   ? Container(
-                      color: AppColors.surfaceContainerLow,
+                      color: cs.surfaceContainerLow,
                       child: Center(
                         child: _loading
-                            ? const CircularProgressIndicator(color: AppColors.secondary, strokeWidth: 2)
-                            : const Icon(Icons.location_off_rounded, color: AppColors.onSurfaceVariant, size: 32),
+                            ? CircularProgressIndicator(color: cs.secondary, strokeWidth: 2)
+                            : Icon(Icons.location_off_rounded, color: cs.onSurfaceVariant, size: 32),
                       ),
                     )
                   : FlutterMap(
@@ -160,7 +160,7 @@ class _GeofenceCardState extends State<GeofenceCard> {
                               point: LatLng(_position!.latitude, _position!.longitude),
                               width: 40,
                               height: 40,
-                              child: const Icon(Icons.location_on_rounded, color: AppColors.secondary, size: 40),
+                              child: Icon(Icons.location_on_rounded, color: cs.secondary, size: 40),
                             ),
                           ],
                         ),
@@ -177,16 +177,16 @@ class _GeofenceCardState extends State<GeofenceCard> {
                     Expanded(child: Text(_error!, style: AppTextStyles.labelSm.copyWith(color: AppColors.securityWarning))),
                     GestureDetector(
                       onTap: _fetchLocation,
-                      child: Text('Retry', style: AppTextStyles.labelSm.copyWith(color: AppColors.secondary, fontWeight: FontWeight.w600)),
+                      child: Text('Retry', style: AppTextStyles.labelSm.copyWith(color: cs.secondary, fontWeight: FontWeight.w600)),
                     ),
                   ])
                 : _loading
-                    ? Text('Acquiring location…', style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant))
+                    ? Text('Acquiring location…', style: AppTextStyles.labelSm.copyWith(color: cs.onSurfaceVariant))
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (_address.isNotEmpty) ...[
-                            Text(_address, style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.w600, color: AppColors.onBackground)),
+                            Text(_address, style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.w600, color: cs.onSurface)),
                             const SizedBox(height: 6),
                           ],
                           Row(children: [
@@ -195,8 +195,10 @@ class _GeofenceCardState extends State<GeofenceCard> {
                             _CoordChip(label: 'LNG', value: _fmt(_position!.longitude)),
                           ]),
                           const SizedBox(height: 6),
-                          Text('Accuracy: ±${_position!.accuracy.toStringAsFixed(1)}m',
-                              style: AppTextStyles.labelSm.copyWith(color: AppColors.onSurfaceVariant)),
+                          Text(
+                            'Accuracy: ±${_position!.accuracy.toStringAsFixed(1)}m',
+                            style: AppTextStyles.labelSm.copyWith(color: cs.onSurfaceVariant),
+                          ),
                         ],
                       ),
           ),
@@ -213,18 +215,19 @@ class _CoordChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
+        color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.surfaceMuted),
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('$label  ', style: AppTextStyles.labelXs.copyWith(color: AppColors.outline)),
-          Text(value, style: AppTextStyles.labelSm.copyWith(color: AppColors.onBackground, fontWeight: FontWeight.w600)),
+          Text('$label  ', style: AppTextStyles.labelXs.copyWith(color: cs.outline)),
+          Text(value, style: AppTextStyles.labelSm.copyWith(color: cs.onSurface, fontWeight: FontWeight.w600)),
         ],
       ),
     );

@@ -6,6 +6,9 @@ import '../../features/auth/login/login_screen.dart';
 import '../../features/auth/auth_provider.dart';
 import '../../features/employee/dashboard/employee_dashboard_screen.dart';
 import '../../features/employee/checkin/checkin_screen.dart';
+import '../../features/employee/history/employee_history_screen.dart';
+import '../../features/employee/profile/employee_profile_screen.dart';
+import '../../features/employee/queue/employee_queue_screen.dart';
 import '../../features/offline/offline_queue_screen.dart';
 
 class AppRoutes {
@@ -16,6 +19,9 @@ class AppRoutes {
   static const hrDashboard       = '/hr/dashboard';
   static const checkin           = '/employee/checkin';
   static const offlineQueue      = '/employee/offline-queue';
+  static const history           = '/employee/history';
+  static const queue             = '/employee/queue';
+  static const profile           = '/employee/profile';
 }
 
 GoRouter createRouter(WidgetRef ref) {
@@ -112,6 +118,39 @@ GoRouter createRouter(WidgetRef ref) {
         ),
       ),
       GoRoute(
+        path: AppRoutes.history,
+        name: 'history',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const EmployeeHistoryScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.queue,
+        name: 'queue',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const EmployeeQueueScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const EmployeeProfileScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.checkin,
         name: 'checkin',
         pageBuilder: (context, state) => CustomTransitionPage(
@@ -132,9 +171,16 @@ GoRouter createRouter(WidgetRef ref) {
   );
 }
 
-/// Makes GoRouter react to authProvider state changes.
+/// Makes GoRouter react to authProvider state changes only.
+/// Deliberately ignores all other providers (settings, etc.) so that
+/// theme/locale toggles do not trigger a router refresh and re-run
+/// the redirect logic (which would send the user back to splash).
 class _AuthStateListenable extends ChangeNotifier {
   _AuthStateListenable(WidgetRef ref) {
-    ref.listen(authProvider, (_, __) => notifyListeners());
+    ref.listen(authProvider, (previous, next) {
+      if (previous?.status != next.status) {
+        notifyListeners();
+      }
+    });
   }
 }

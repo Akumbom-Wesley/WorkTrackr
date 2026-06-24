@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/router/app_router.dart';
 import '../auth_provider.dart';
@@ -17,7 +16,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _employeeIdController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _hasEdited = false;
 
   @override
   void dispose() {
@@ -27,7 +25,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _onLogin() {
-    setState(() => _hasEdited = false);
     final employeeId = _employeeIdController.text.trim();
     final password = _passwordController.text.trim();
     if (employeeId.isEmpty || password.isEmpty) return;
@@ -54,9 +51,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = authState.status == AuthStatus.loading;
     final errorMessage =
         authState.status == AuthStatus.error ? authState.errorMessage : null;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceContainerLow,
+      backgroundColor: cs.surfaceContainerLow,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -64,40 +62,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 48),
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.security,
-                  size: 40,
-                  color: AppColors.onPrimary,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  'assets/images/worktrackr.png',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 'WorkTrackr',
                 style: AppTextStyles.headlineLgMobile.copyWith(
-                  color: AppColors.onBackground,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Secure Employee Portal',
                 style: AppTextStyles.bodyMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 32),
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceBase,
+                  color: cs.surface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.surfaceMuted),
+                  border: Border.all(color: cs.outlineVariant),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.05),
@@ -117,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Text(
                           'System\nAccess',
                           style: AppTextStyles.headlineMd.copyWith(
-                            color: AppColors.onBackground,
+                            color: cs.onSurface,
                           ),
                         ),
                         const _EncryptedChip(),
@@ -132,25 +126,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.errorContainer,
+                          color: cs.errorContainer,
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: AppColors.error.withValues(alpha: 0.3),
+                            color: cs.error.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.error_outline,
                               size: 16,
-                              color: AppColors.onErrorContainer,
+                              color: cs.onErrorContainer,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 errorMessage,
                                 style: AppTextStyles.bodyMd.copyWith(
-                                  color: AppColors.onErrorContainer,
+                                  color: cs.onErrorContainer,
                                 ),
                               ),
                             ),
@@ -163,7 +157,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'ERPNext Employee ID',
                       style: AppTextStyles.bodyMd.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.onBackground,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -171,19 +165,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _employeeIdController,
                       keyboardType: TextInputType.text,
                       autocorrect: false,
-                      onChanged: (_) => setState(() => _hasEdited = true),
                       enabled: !isLoading,
                       style: AppTextStyles.bodyMd.copyWith(
-                        color: AppColors.onBackground,
+                        color: cs.onSurface,
                       ),
                       decoration: InputDecoration(
                         hintText: 'e.g. SET-1042',
                         hintStyle: AppTextStyles.bodyMd.copyWith(
-                          color: AppColors.outline,
+                          color: cs.outline,
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.badge_outlined,
-                          color: AppColors.outline,
+                          color: cs.outline,
                           size: 20,
                         ),
                       ),
@@ -193,26 +186,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       'Password',
                       style: AppTextStyles.bodyMd.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.onBackground,
+                        color: cs.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
-                      onChanged: (_) => setState(() => _hasEdited = true),
                       enabled: !isLoading,
                       style: AppTextStyles.bodyMd.copyWith(
-                        color: AppColors.onBackground,
+                        color: cs.onSurface,
                       ),
                       decoration: InputDecoration(
                         hintText: '••••••••',
                         hintStyle: AppTextStyles.bodyMd.copyWith(
-                          color: AppColors.outline,
+                          color: cs.outline,
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.key_outlined,
-                          color: AppColors.outline,
+                          color: cs.outline,
                           size: 20,
                         ),
                         suffixIcon: IconButton(
@@ -220,7 +212,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             _obscurePassword
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
-                            color: AppColors.outline,
+                            color: cs.outline,
                             size: 20,
                           ),
                           onPressed: () => setState(
@@ -234,21 +226,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton.icon(
-                        onPressed: (isLoading || (authState.status == AuthStatus.error && !_hasEdited)) ? null : _onLogin,
+                        onPressed: isLoading ? null : _onLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryContainer,
-                          foregroundColor: AppColors.onPrimary,
+                          backgroundColor: cs.primaryContainer,
+                          foregroundColor: cs.onPrimary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                         icon: isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 18,
                                 height: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.onPrimary,
+                                  color: cs.onPrimary,
                                 ),
                               )
                             : const Icon(Icons.login, size: 18),
@@ -265,7 +257,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'New Employee?',
                 style: AppTextStyles.bodyMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
+                  color: cs.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 6),
@@ -274,16 +266,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward,
                       size: 16,
-                      color: AppColors.secondary,
+                      color: cs.secondary,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'Set Initial Password',
                       style: AppTextStyles.bodyMd.copyWith(
-                        color: AppColors.secondary,
+                        color: cs.secondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -304,28 +296,29 @@ class _EncryptedChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.secondaryContainer.withValues(alpha: 0.3),
+        color: cs.secondaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.3),
+          color: cs.secondary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.lock_outline,
             size: 12,
-            color: AppColors.secondary,
+            color: cs.secondary,
           ),
           const SizedBox(width: 5),
           Text(
             'ENCRYPTED\nCONNECTION',
             style: AppTextStyles.labelXs.copyWith(
-              color: AppColors.secondary,
+              color: cs.secondary,
               letterSpacing: 0.8,
             ),
           ),

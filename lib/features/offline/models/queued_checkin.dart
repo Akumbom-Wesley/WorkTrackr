@@ -1,4 +1,4 @@
-/// A check-in payload that has been saved to the local Hive queue
+/// A check-in payload that has been saved to the local SQLite queue
 /// because the device was offline at submission time.
 class QueuedCheckin {
   final String id;          // UUID — dedup key sent to backend
@@ -11,16 +11,23 @@ class QueuedCheckin {
     required this.queuedAt,
   });
 
-  Map<String, dynamic> toHive() => {
+  /// Row shape for the `checkin_queue` table. `payload` is JSON-encoded
+  /// by the caller before insertion (see CheckinQueue.enqueue).
+  Map<String, dynamic> toRow(String payloadJson) => {
         'id': id,
-        'payload': payload,
-        'queuedAt': queuedAt.toUtc().toIso8601String(),
+        'payload': payloadJson,
+        'queued_at': queuedAt.toUtc().toIso8601String(),
       };
 
-  factory QueuedCheckin.fromHive(Map<dynamic, dynamic> map) => QueuedCheckin(
-        id: map['id'] as String,
-        payload: Map<String, dynamic>.from(map['payload'] as Map),
-        queuedAt: DateTime.parse(map['queuedAt'] as String),
+  /// Builds a [QueuedCheckin] from a sqflite row, given the already
+  /// JSON-decoded payload map.
+  factory QueuedCheckin.fromRow(
+    Map<String, dynamic> row,
+    Map<String, dynamic> decodedPayload,
+  ) => QueuedCheckin(
+        id: row['id'] as String,
+        payload: decodedPayload,
+        queuedAt: DateTime.parse(row['queued_at'] as String),
       );
 
   /// Shape sent to POST /api/v1/checkins/sync/ — payload with offline_id injected

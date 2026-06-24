@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 
 /// Large prominent check-in / check-out button.
@@ -17,9 +16,10 @@ class CheckInFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final label = isCheckedIn ? 'Check Out' : 'Check In';
     final bgColor =
-    isCheckedIn ? AppColors.onSurfaceVariant : AppColors.secondary;
+    isCheckedIn ? cs.onSurfaceVariant : cs.secondary;
     final icon =
     isCheckedIn ? Icons.logout_rounded : Icons.login_rounded;
 
@@ -30,7 +30,7 @@ class CheckInFab extends StatelessWidget {
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: bgColor,
-          foregroundColor: AppColors.onPrimary,
+          foregroundColor: cs.onPrimary,
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
