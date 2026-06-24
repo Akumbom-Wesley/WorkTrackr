@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'features/offline/queue/checkin_queue.dart';
 import 'features/offline/sync/sync_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,8 +9,6 @@ import 'features/auth/auth_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  await CheckinQueue.init();
   SyncService.instance.start();
   runApp(
     const ProviderScope(

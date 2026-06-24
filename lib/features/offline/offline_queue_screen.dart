@@ -21,8 +21,10 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
     _reload();
   }
 
-  void _reload() {
-    setState(() => _items = CheckinQueue.instance.getAll());
+  Future<void> _reload() async {
+    final items = await CheckinQueue.instance.getAll();
+    if (!mounted) return;
+    setState(() => _items = items);
   }
 
   @override
