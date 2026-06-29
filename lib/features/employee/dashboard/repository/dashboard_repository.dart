@@ -54,12 +54,10 @@ class DashboardRepository {
         ? EmployeeStatusResponse.fromJson(statusJson)
         : const EmployeeStatusResponse();
 
-    final todayAttendance =
-        (todayJson?['attendance'] as List<dynamic>? ?? [])
-            .cast<Map<String, dynamic>>();
-    final weekAttendance =
-        (weekJson?['attendance'] as List<dynamic>? ?? [])
-            .cast<Map<String, dynamic>>();
+    final todayAttendance = (todayJson?['attendance'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final weekAttendance = (weekJson?['attendance'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
 
     final todaySummary = TodaySummary.fromAttendance(
       todayAttendance,
@@ -106,12 +104,10 @@ class DashboardRepository {
     await _cache.write(DashboardCache.scopeToday, todayJson);
     await _cache.write(DashboardCache.scopeWeek, weekJson);
 
-    final todayAttendance =
-        (todayJson['attendance'] as List<dynamic>? ?? [])
-            .cast<Map<String, dynamic>>();
-    final weekAttendance =
-        (weekJson['attendance'] as List<dynamic>? ?? [])
-            .cast<Map<String, dynamic>>();
+    final todayAttendance = (todayJson['attendance'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
+    final weekAttendance = (weekJson['attendance'] as List<dynamic>? ?? [])
+        .cast<Map<String, dynamic>>();
 
     final todaySummary = TodaySummary.fromAttendance(
       todayAttendance,

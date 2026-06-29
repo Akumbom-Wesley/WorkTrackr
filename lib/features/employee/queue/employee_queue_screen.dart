@@ -229,8 +229,10 @@ class _QueueEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = item.payload;
     final isIn = (p['log_type'] as String? ?? 'IN') == 'IN';
-    final lat = (p['gps_lat_smoothed'] as num?)?.toStringAsFixed(4) ?? '--';
-    final lng = (p['gps_lng_smoothed'] as num?)?.toStringAsFixed(4) ?? '--';
+    final latRaw = p['gps_lat_smoothed'];
+    final lngRaw = p['gps_lng_smoothed'];
+    final lat = (latRaw is num ? latRaw : double.tryParse(latRaw?.toString() ?? ''))?.toStringAsFixed(4) ?? '--';
+    final lng = (lngRaw is num ? lngRaw : double.tryParse(lngRaw?.toString() ?? ''))?.toStringAsFixed(4) ?? '--';
     final ssid = p['wifi_ssid'] as String? ?? '';
     final band = p['wifi_band'] as String? ?? '';
     final tsRaw = p['timestamp_device'] as String?;
