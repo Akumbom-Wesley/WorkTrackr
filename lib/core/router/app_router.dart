@@ -10,6 +10,14 @@ import '../../features/employee/history/employee_history_screen.dart';
 import '../../features/employee/profile/employee_profile_screen.dart';
 import '../../features/employee/queue/employee_queue_screen.dart';
 import '../../features/offline/offline_queue_screen.dart';
+import '../../features/hr/dashboard/hr_dashboard_screen.dart';
+import '../../features/hr/employees/hr_employee_list_screen.dart';
+import '../../features/hr/onboarding/hr_onboarding_screen.dart';
+import '../../features/hr/employees/hr_employee_detail_screen.dart';
+import '../../features/hr/flagged/hr_flagged_screen.dart';
+import '../../features/hr/company/hr_company_screen.dart';
+import '../../features/hr/company/providers/hr_company_providers.dart';
+import '../../core/constants/app_constants.dart';
 
 class AppRoutes {
   static const splash            = '/';
@@ -17,6 +25,11 @@ class AppRoutes {
   static const setPassword       = '/set-password';
   static const employeeDashboard = '/employee/dashboard';
   static const hrDashboard       = '/hr/dashboard';
+  static const hrEmployees       = '/hr/employees';
+  static const hrFlagged         = '/hr/flagged';
+  static const hrOnboarding      = '/hr/onboarding';
+  static const hrCompany         = '/hr/company';
+  static const hrEmployeeDetail  = '/hr/employees/detail/:employeeId';
   static const checkin           = '/employee/checkin';
   static const offlineQueue      = '/employee/offline-queue';
   static const history           = '/employee/history';
@@ -43,9 +56,12 @@ GoRouter createRouter(WidgetRef ref) {
       // Not logged in and not already on a public route → go to login
       if (!isLoggedIn && !onPublic) return AppRoutes.login;
 
-      // Logged in and trying to visit login → go to dashboard
+      // Logged in and trying to visit login → route by role
       if (isLoggedIn && state.matchedLocation == AppRoutes.login) {
-        return AppRoutes.employeeDashboard;
+        final role = ref.read(authProvider).user?.role ?? '';
+        return role == AppConstants.roleHrAdmin
+            ? AppRoutes.hrDashboard
+            : AppRoutes.employeeDashboard;
       }
 
       return null;
@@ -85,9 +101,7 @@ GoRouter createRouter(WidgetRef ref) {
         name: 'hr-dashboard',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const Scaffold(
-            body: Center(child: Text('HR Dashboard — Coming Soon')),
-          ),
+          child: const HrDashboardScreen(),
           transitionsBuilder: (context, animation, secondary, child) =>
               FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 400),
@@ -145,6 +159,64 @@ GoRouter createRouter(WidgetRef ref) {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           child: const EmployeeProfileScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.hrEmployees,
+        name: 'hr-employees',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HrEmployeeListScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.hrEmployeeDetail,
+        name: 'hr-employee-detail',
+        pageBuilder: (context, state) {
+          final employeeId = int.parse(state.pathParameters['employeeId']!);
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: HrEmployeeDetailScreen(employeeId: employeeId),
+            transitionsBuilder: (context, animation, secondary, child) =>
+                FadeTransition(opacity: animation, child: child),
+            transitionDuration: const Duration(milliseconds: 300),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.hrFlagged,
+        name: 'hr-flagged',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HrFlaggedScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.hrOnboarding,
+        name: 'hr-onboarding',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HrOnboardingScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.hrCompany,
+        name: 'hr-company',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HrCompanyScreen(),
           transitionsBuilder: (context, animation, secondary, child) =>
               FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 300),

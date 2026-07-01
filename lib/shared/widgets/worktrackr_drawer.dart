@@ -13,6 +13,11 @@ class WorkTrackrDrawer extends StatelessWidget {
     this.onOfflineQueueTap,
     this.onSecurityTap,
     this.onLogoutTap,
+    this.isHrAdmin = false,
+    this.onEmployeesTap,
+    this.onFlaggedTap,
+    this.onOnboardingTap,
+    this.onCompanyTap,
   });
 
   final String? fullName;
@@ -22,6 +27,11 @@ class WorkTrackrDrawer extends StatelessWidget {
   final VoidCallback? onOfflineQueueTap;
   final VoidCallback? onSecurityTap;
   final VoidCallback? onLogoutTap;
+  final bool isHrAdmin;
+  final VoidCallback? onEmployeesTap;
+  final VoidCallback? onFlaggedTap;
+  final VoidCallback? onOnboardingTap;
+  final VoidCallback? onCompanyTap;
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +118,52 @@ class WorkTrackrDrawer extends StatelessWidget {
               },
             ),
 
+            if (isHrAdmin) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: Text(
+                  'HR ADMIN',
+                  style: AppTextStyles.labelXs.copyWith(
+                    color: cs.onPrimaryContainer,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              _DrawerItem(
+                icon: Icons.people_outline_rounded,
+                label: 'People & Employees',
+                onTap: () {
+                  Navigator.pop(context);
+                  onEmployeesTap?.call();
+                },
+              ),
+              _DrawerItem(
+                icon: Icons.flag_outlined,
+                label: 'Flagged Records',
+                onTap: () {
+                  Navigator.pop(context);
+                  onFlaggedTap?.call();
+                },
+              ),
+              _DrawerItem(
+                icon: Icons.mark_email_unread_outlined,
+                label: 'Onboarding',
+                onTap: () {
+                  Navigator.pop(context);
+                  onOnboardingTap?.call();
+                },
+              ),
+              _DrawerItem(
+                icon: Icons.business_outlined,
+                label: 'Company Info',
+                onTap: () {
+                  Navigator.pop(context);
+                  onCompanyTap?.call();
+                },
+              ),
+              const SizedBox(height: 4),
+            ],
             const Spacer(),
             Divider(color: cs.outlineVariant),
 

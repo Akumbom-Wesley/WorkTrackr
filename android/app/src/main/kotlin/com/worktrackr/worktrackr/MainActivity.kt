@@ -7,12 +7,13 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterFragmentActivity() {
-    private val channel = "com.worktrackr.worktrackr/wifi_band"
+    private val wifiChannel = "com.worktrackr.worktrackr/wifi_band"
+    private val mediaStoreChannel = "com.worktrackr.worktrackr/media_store"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, wifiChannel)
             .setMethodCallHandler { call, result ->
                 try {
                     val wifiManager = applicationContext
@@ -47,6 +48,34 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                 } catch (e: Exception) {
                     result.success(null)
+                }
+            }
+
+        // Unlike wifiChannel above, failures here are surfaced via
+        // result.error(...), not swallowed to a null/success response —
+        // a failed save must be visible to the Dart side as a real error
+        // so it surfaces through the existing _showErrorAlert flow.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, mediaStoreChannel)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "getSdkInt" -> result.success(android.os.Build.VERSION.SDK_INT)
+                    "saveToDownloads" -> {
+                        try {
+                            val bytes = call.argument<ByteArray>("bytes")
+                                ?: throw IllegalArgumentException("Missing 'bytes' argument")
+                            val displayName = call.argument<String>("displayName")
+                                ?: throw IllegalArgumentException("Missing 'displayName' argument")
+                            val mimeType = call.argument<String>("mimeType")
+                                ?: throw IllegalArgumentException("Missing 'mimeType' argument")
+
+                            val savedPath = MediaStoreSaver(applicationContext)
+                                .save(bytes, displayName, mimeType)
+                            result.success(savedPath)
+                        } catch (e: Exception) {
+                            result.error("SAVE_FAILED", e.message, null)
+                        }
+                    }
+                    else -> result.notImplemented()
                 }
             }
     }

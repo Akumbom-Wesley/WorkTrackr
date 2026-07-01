@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ADD THESE TWO LINES -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -8,6 +9,18 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+
+    <!-- Reports CSV/PDF save-to-Downloads. WRITE_EXTERNAL_STORAGE covers
+         pre-scoped-storage API 21-28. MANAGE_EXTERNAL_STORAGE covers
+         API 29+ direct-path writes to public Downloads — broad access,
+         needs real-device verification across API levels; flagged as
+         untested in the handover. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
+    <!-- MANAGE_EXTERNAL_STORAGE removed: API 29+ now uses MediaStore.Downloads
+         insertion (MediaStoreSaver.kt), which needs no broad storage
+         permission. WRITE_EXTERNAL_STORAGE above still covers the pre-29
+         raw-path fallback. -->
 
     <application
         android:label="WorkTrackr"
