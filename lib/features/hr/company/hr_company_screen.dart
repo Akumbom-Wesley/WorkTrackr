@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -19,6 +20,10 @@ class HrCompanyScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: cs.primaryContainer,
         foregroundColor: cs.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: Text(
           'Company Settings',
           style: AppTextStyles.headlineMd.copyWith(color: cs.onPrimary),
@@ -57,7 +62,7 @@ class _CompanyBody extends StatelessWidget {
         _SectionCard(
           title: 'Company Identity',
           icon: Icons.business_outlined,
-          iconColor: AppColors.secondary,
+          iconColor: Theme.of(context).colorScheme.secondary,
           rows: [
             _Row(label: 'Name',          value: settings.info.name),
             _Row(label: 'ERPNext ID',    value: settings.info.erpnextDocName),
@@ -83,7 +88,7 @@ class _CompanyBody extends StatelessWidget {
         _SectionCard(
           title: 'Attendance Site',
           icon: Icons.location_on_outlined,
-          iconColor: AppColors.secondary,
+          iconColor: Theme.of(context).colorScheme.secondary,
           rows: [
             _Row(label: 'Wi-Fi SSID',    value: settings.geofence.wifiSsid),
             _Row(label: 'Wi-Fi BSSID',   value: settings.geofence.wifiBssid),
@@ -265,7 +270,7 @@ class _MapPreviewTile extends StatelessWidget {
             child: Row(
               children: [
                 Icon(Icons.map_outlined,
-                    size: 16, color: AppColors.secondary),
+                    size: 16, color: Theme.of(context).colorScheme.secondary),
                 const SizedBox(width: 6),
                 Text(
                   'GEOFENCE LOCATION',

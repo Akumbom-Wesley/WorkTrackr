@@ -25,10 +25,10 @@ class FlaggedRecord {
       employeeId:         json['employee_id']          as int,
       employeeName:       json['employee_name']        as String,
       erpnextEmployeeId:  json['erpnext_employee_id']  as String,
-      flagType:           json['flag_type']            as String,
-      date:               json['date']                 as String,
-      notes:              json['notes']                as String?,
-      resolved:           json['resolved']             as bool,
+      flagType:           json['flag_reason']          as String? ?? 'UNKNOWN',
+      date:               json['timestamp_gps']        as String,
+      notes:              json['review_note']          as String?,
+      resolved:           (json['is_approved'] == true) || (json['is_rejected'] == true),
     );
   }
 
@@ -48,9 +48,9 @@ class FlaggedRecord {
         'employee_id':          employeeId,
         'employee_name':        employeeName,
         'erpnext_employee_id':  erpnextEmployeeId,
-        'flag_type':            flagType,
-        'date':                 date,
-        'notes':                notes,
-        'resolved':             resolved,
+        'flag_reason':          flagType,
+        'timestamp_gps':        date,
+        'review_note':          notes,
+        'is_approved':          resolved,
       };
 }

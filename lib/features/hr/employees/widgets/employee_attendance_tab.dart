@@ -53,7 +53,7 @@ class EmployeeAttendanceTab extends StatelessWidget {
             _SummaryChip(
               label: 'Hours Worked',
               value: history.totalHoursWorked,
-              color: AppColors.secondary,
+              color: Theme.of(context).colorScheme.secondary,
             ),
           ],
         ),

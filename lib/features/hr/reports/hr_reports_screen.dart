@@ -115,26 +115,26 @@ class _HrReportsScreenState extends ConsumerState<HrReportsScreen> {
                   ? null
                   : () => ref.read(hrReportGenerateProvider.notifier).generate(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.secondary,
-                foregroundColor: AppColors.onSecondary,
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                foregroundColor: Theme.of(context).colorScheme.onSecondary,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               icon: isGenerating
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.onSecondary,
+                        color: Theme.of(context).colorScheme.onSecondary,
                       ),
                     )
                   : const Icon(Icons.bar_chart_rounded, size: 20),
               label: Text(
                 isGenerating ? 'Generating…' : 'Generate Report',
-                style: AppTextStyles.button.copyWith(color: AppColors.onSecondary),
+                style: AppTextStyles.button.copyWith(color: Theme.of(context).colorScheme.onSecondary),
               ),
             ),
           ),
@@ -200,8 +200,8 @@ class _TopAlertState extends State<_TopAlert> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: widget.isSuccess
-                  ? AppColors.secondaryContainer
-                  : AppColors.errorContainer,
+                  ? Theme.of(context).colorScheme.secondaryContainer
+                  : Theme.of(context).colorScheme.errorContainer,
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
@@ -218,8 +218,8 @@ class _TopAlertState extends State<_TopAlert> {
                       ? Icons.check_circle_outline_rounded
                       : Icons.error_outline_rounded,
                   color: widget.isSuccess
-                      ? AppColors.secondary
-                      : AppColors.onErrorContainer,
+                      ? Theme.of(context).colorScheme.secondary
+                      : Theme.of(context).colorScheme.onErrorContainer,
                   size: 20,
                 ),
                 const SizedBox(width: 10),
@@ -228,8 +228,8 @@ class _TopAlertState extends State<_TopAlert> {
                     widget.message,
                     style: AppTextStyles.bodyMd.copyWith(
                       color: widget.isSuccess
-                          ? AppColors.secondary
-                          : AppColors.onErrorContainer,
+                          ? Theme.of(context).colorScheme.secondary
+                          : Theme.of(context).colorScheme.onErrorContainer,
                     ),
                   ),
                 ),
@@ -239,8 +239,8 @@ class _TopAlertState extends State<_TopAlert> {
                   child: Icon(
                     Icons.close_rounded,
                     color: widget.isSuccess
-                        ? AppColors.secondary
-                        : AppColors.onErrorContainer,
+                        ? Theme.of(context).colorScheme.secondary
+                        : Theme.of(context).colorScheme.onErrorContainer,
                     size: 18,
                   ),
                 ),

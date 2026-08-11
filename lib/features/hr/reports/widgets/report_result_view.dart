@@ -138,13 +138,13 @@ class _FileSavedView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.secondaryContainer.withValues(alpha: 0.4),
+        color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded, color: AppColors.secondary),
+          Icon(Icons.check_circle_rounded, color: Theme.of(context).colorScheme.secondary),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

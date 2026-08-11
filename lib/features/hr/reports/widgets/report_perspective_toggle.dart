@@ -70,14 +70,14 @@ class _Segment extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? AppColors.secondaryContainer : Colors.transparent,
+          color: selected ? Theme.of(context).colorScheme.secondaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
           child: Text(
             label,
             style: AppTextStyles.bodyMd.copyWith(
-              color: selected ? AppColors.onSecondaryContainer : cs.onSurfaceVariant,
+              color: selected ? Theme.of(context).colorScheme.onSecondaryContainer : cs.onSurfaceVariant,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
             textAlign: TextAlign.center,

@@ -47,8 +47,8 @@ class _WorkTrackrNavShellState extends State<WorkTrackrNavShell> {
         tabs: widget.tabs,
         navBarBuilder: (navBarConfig) => Style1BottomNavBar(
           navBarConfig: navBarConfig,
-          navBarDecoration: const NavBarDecoration(
-            color: AppColors.surfaceBase,
+          navBarDecoration: NavBarDecoration(
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),

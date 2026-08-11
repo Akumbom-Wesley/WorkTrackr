@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_colors.dart';
+import '../../shared/widgets/worktrackr_empty_state.dart';
 import '../../core/constants/app_text_styles.dart';
 import 'models/queued_checkin.dart';
 import 'queue/checkin_queue.dart';
@@ -34,6 +36,10 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: Text(
           'Offline Queue',
           style: AppTextStyles.headlineMd.copyWith(color: Theme.of(context).colorScheme.onPrimary),
@@ -42,47 +48,23 @@ class _OfflineQueueScreenState extends ConsumerState<OfflineQueueScreen> {
         actions: const [],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => _reload(),
         color: Theme.of(context).colorScheme.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        onRefresh: () async => _reload(),
         child: _items.isEmpty ? _buildEmpty() : _buildList(),
       ),
     );
   }
 
   Widget _buildEmpty() {
-    return ListView(
-      children: [
-        SizedBox(
-          height: MediaQuery.of(context).size.height * 0.65,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.cloud_done_rounded,
-                  size: 40,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'All synced',
-                style: AppTextStyles.headlineMd
-                    .copyWith(color: Theme.of(context).colorScheme.onSurface),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'No pending check-ins in the queue.',
-                style: AppTextStyles.bodyMd
-                    .copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
-            ],
+    return const CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: WorkTrackrEmptyState(
+            title: 'All synced',
+            message: 'No pending check-ins in the queue.',
+            icon: Icons.cloud_done_rounded,
           ),
         ),
       ],

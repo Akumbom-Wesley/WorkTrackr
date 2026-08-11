@@ -49,7 +49,7 @@ class HrFlaggedRepository {
   }) async {
     final response = await _dio.get(
       '/checkins/flagged/',
-      queryParameters: showResolved ? null : {'resolved': false},
+      queryParameters: showResolved ? null : {'status': 'pending'},
     );
     return (response.data as List<dynamic>)
         .map((e) => FlaggedRecord.fromJson(e as Map<String, dynamic>))
@@ -60,7 +60,10 @@ class HrFlaggedRepository {
   /// scope keys so the record's resolved state is consistent regardless of
   /// which filter the user switches to next.
   Future<FlaggedRecord> resolve(int id) async {
-    final response = await _dio.patch('/checkins/flagged/$id/resolve/');
+    final response = await _dio.patch(
+      '/checkins/flagged/$id/approve/',
+      data: {'review_note': 'Resolved via Dashboard'},
+    );
     final updated = FlaggedRecord.fromJson(
         response.data as Map<String, dynamic>);
 

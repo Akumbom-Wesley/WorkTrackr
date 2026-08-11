@@ -102,6 +102,8 @@ class CheckinService {
       }
       final authenticated = await _localAuth.authenticate(
         localizedReason: 'Verify your identity to clock in',
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
 
       if (!authenticated) {
@@ -155,7 +157,7 @@ class CheckinService {
       // Client-side validation against GeofenceSite config
       if (site != null) {
         final rssiOk = rssi != null && rssi >= site.rssiThreshold;
-        final bssidOk = site.wifiBssid.isEmpty || bssid == site.wifiBssid;
+        final bssidOk = site.wifiBssid.isEmpty || bssid.toLowerCase() == site.wifiBssid.toLowerCase();
         final bandOk = !site.enforce5ghz || band == '5GHz';
 
         debugPrint(

@@ -39,7 +39,7 @@ class DioClient {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        // Return the raw response on any status so our interceptor
+        // Return raw response on any status so our interceptor
         // can inspect 401s before Dio throws.
         validateStatus: (status) => status != null && status < 500,
       ),
@@ -112,12 +112,19 @@ class _AuthInterceptor extends Interceptor {
       ) async {
     // 401 — try silent refresh
     if (response.statusCode == 401) {
+      // Don't refresh if it's already a login or refresh request
+      if (response.requestOptions.path.contains('/auth/')) {
+        handler.next(response);
+        return;
+      }
+
       final retried = await _tryRefreshAndRetry(response.requestOptions);
       if (retried != null) {
         handler.resolve(retried);
         return;
       }
-      // Refresh failed — clear tokens, propagate the 401
+      
+      // Refresh failed — clear tokens and trigger callback
       await _clearTokens();
     }
     handler.next(response);
@@ -125,6 +132,10 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
+    // Also catch 401s that come as errors if validateStatus was different
+    if (err.response?.statusCode == 401) {
+       _clearTokens();
+    }
     handler.next(err);
   }
 
@@ -161,7 +172,7 @@ class _AuthInterceptor extends Interceptor {
         return await _dio.fetch(retryOptions);
       }
     } catch (_) {
-      // Refresh call itself failed — fall through to clear tokens
+      // Refresh call itself failed
     }
     return null;
   }
@@ -171,6 +182,8 @@ class _AuthInterceptor extends Interceptor {
     await _storage.delete(key: AppConstants.refreshTokenKey);
     await _storage.delete(key: AppConstants.roleKey);
     await _storage.delete(key: AppConstants.userIdKey);
-    DioClient.onSessionExpired?.call();
+    
+    // Use a small delay to avoid race conditions during navigation
+    Future.microtask(() => DioClient.onSessionExpired?.call());
   }
 }

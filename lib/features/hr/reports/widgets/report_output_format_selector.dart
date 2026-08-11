@@ -70,7 +70,7 @@ class _FormatOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final color = selected ? AppColors.secondary : cs.onSurfaceVariant;
+    final color = selected ? Theme.of(context).colorScheme.secondary : cs.onSurfaceVariant;
 
     return InkWell(
       onTap: onTap,
@@ -80,7 +80,7 @@ class _FormatOption extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: selected ? AppColors.secondary : cs.outlineVariant,
+            color: selected ? Theme.of(context).colorScheme.secondary : cs.outlineVariant,
             width: selected ? 1.5 : 1,
           ),
         ),

@@ -19,6 +19,15 @@ class AuthRepository {
         'password': password,
       },
     );
+
+    if (response.statusCode != null && response.statusCode! >= 400) {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        type: DioExceptionType.badResponse,
+      );
+    }
+
     return AuthResponse.fromJson(response.data as Map<String, dynamic>);
   }
 

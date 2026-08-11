@@ -38,21 +38,24 @@ class _DashboardShimmerState extends State<DashboardShimmer>
       animation: _anim,
       builder: (_, __) => Opacity(
         opacity: _anim.value,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _block(cs, height: 130, radius: 12),
-              const SizedBox(height: 16),
-              _block(cs, height: 100, radius: 12),
-              const SizedBox(height: 16),
-              _block(cs, height: 56, radius: 12),
-              const SizedBox(height: 24),
-              _block(cs, height: 14, width: 120, radius: 4),
-              const SizedBox(height: 12),
-              _block(cs, height: 110, radius: 12),
-            ],
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _block(cs, height: 130, radius: 12),
+                const SizedBox(height: 16),
+                _block(cs, height: 100, radius: 12),
+                const SizedBox(height: 16),
+                _block(cs, height: 56, radius: 12),
+                const SizedBox(height: 24),
+                _block(cs, height: 14, width: 120, radius: 4),
+                const SizedBox(height: 12),
+                _block(cs, height: 110, radius: 12),
+              ],
+            ),
           ),
         ),
       ),

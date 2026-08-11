@@ -14,6 +14,7 @@ import '../../features/hr/dashboard/hr_dashboard_screen.dart';
 import '../../features/hr/employees/hr_employee_list_screen.dart';
 import '../../features/hr/onboarding/hr_onboarding_screen.dart';
 import '../../features/hr/employees/hr_employee_detail_screen.dart';
+import '../../features/hr/analytics/hr_analytics_screen.dart';
 import '../../features/hr/flagged/hr_flagged_screen.dart';
 import '../../features/hr/company/hr_company_screen.dart';
 import '../../features/hr/company/providers/hr_company_providers.dart';
@@ -30,6 +31,7 @@ class AppRoutes {
   static const hrOnboarding      = '/hr/onboarding';
   static const hrCompany         = '/hr/company';
   static const hrEmployeeDetail  = '/hr/employees/detail/:employeeId';
+  static const hrAnalytics       = '/hr/analytics';
   static const checkin           = '/employee/checkin';
   static const offlineQueue      = '/employee/offline-queue';
   static const history           = '/employee/history';
@@ -158,7 +160,7 @@ GoRouter createRouter(WidgetRef ref) {
         name: 'profile',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          child: const EmployeeProfileScreen(),
+          child: const EmployeeProfileScreen(isStandalone: true),
           transitionsBuilder: (context, animation, secondary, child) =>
               FadeTransition(opacity: animation, child: child),
           transitionDuration: const Duration(milliseconds: 300),
@@ -188,6 +190,17 @@ GoRouter createRouter(WidgetRef ref) {
             transitionDuration: const Duration(milliseconds: 300),
           );
         },
+      ),
+      GoRoute(
+        path: AppRoutes.hrAnalytics,
+        name: 'hr-analytics',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HrAnalyticsScreen(),
+          transitionsBuilder: (context, animation, secondary, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
       ),
       GoRoute(
         path: AppRoutes.hrFlagged,

@@ -26,6 +26,10 @@ class HrEmployeeListScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: cs.primaryContainer,
         foregroundColor: cs.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: Text(
           'Employees',
           style: AppTextStyles.headlineMd.copyWith(color: cs.onPrimary),
@@ -63,8 +67,8 @@ class HrEmployeeListScreen extends ConsumerWidget {
               data: (employees) => employees.isEmpty
                   ? const EmployeeListEmptyState()
                   : RefreshIndicator(
-                      color: AppColors.secondary,
-                      backgroundColor: AppColors.surfaceBase,
+                      color: Theme.of(context).colorScheme.secondary,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
                       onRefresh: () =>
                           ref.read(hrEmployeeListProvider.notifier).refresh(),
                       child: ListView.separated(

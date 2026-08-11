@@ -154,7 +154,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.onTertiaryContainer.withValues(alpha: 0.06),
+                    Theme.of(context).colorScheme.onTertiaryContainer.withValues(alpha: 0.06),
                     Colors.transparent,
                   ],
                 ),
@@ -214,7 +214,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         Text(
           'WorkTrackr',
           style: AppTextStyles.headlineXl.copyWith(
-            color: AppColors.surfaceBase,
+            color: Theme.of(context).colorScheme.surface,
             letterSpacing: -0.5,
           ),
         ),
@@ -222,7 +222,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         Text(
           'SECURE IDENTITY PLATFORM',
           style: AppTextStyles.labelXs.copyWith(
-            color: AppColors.inversePrimary.withValues(alpha: 0.8),
+            color: Theme.of(context).colorScheme.inversePrimary.withValues(alpha: 0.8),
             letterSpacing: 2.5,
           ),
         ),
@@ -237,7 +237,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: AppColors.surfaceBase.withValues(alpha: (1 - value) * 0.25),
+          color: Theme.of(context).colorScheme.surface.withValues(alpha: (1 - value) * 0.25),
           width: 1,
         ),
       ),
@@ -256,14 +256,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               Text(
                 _statuses[_statusIndex],
                 style: AppTextStyles.labelXs.copyWith(
-                  color: AppColors.inversePrimary,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                   letterSpacing: 1.2,
                 ),
               ),
               Text(
                 '$_percent%',
                 style: AppTextStyles.labelXs.copyWith(
-                  color: AppColors.inversePrimary,
+                  color: Theme.of(context).colorScheme.inversePrimary,
                   letterSpacing: 1.2,
                 ),
               ),
@@ -275,7 +275,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Container(
               height: 3,
               width: double.infinity,
-              color: AppColors.surfaceBase.withValues(alpha: 0.1),
+              color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
               child: AnimatedBuilder(
                 animation: _progressAnimation,
                 builder: (context, _) => FractionallySizedBox(
@@ -311,7 +311,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     return Icon(
       icon,
       size: 18,
-      color: AppColors.surfaceBase.withValues(alpha: 0.4),
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.4),
     );
   }
 }

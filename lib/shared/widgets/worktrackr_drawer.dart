@@ -14,6 +14,7 @@ class WorkTrackrDrawer extends StatelessWidget {
     this.onSecurityTap,
     this.onLogoutTap,
     this.isHrAdmin = false,
+    this.onAnalyticsTap,
     this.onEmployeesTap,
     this.onFlaggedTap,
     this.onOnboardingTap,
@@ -28,6 +29,7 @@ class WorkTrackrDrawer extends StatelessWidget {
   final VoidCallback? onSecurityTap;
   final VoidCallback? onLogoutTap;
   final bool isHrAdmin;
+  final VoidCallback? onAnalyticsTap;
   final VoidCallback? onEmployeesTap;
   final VoidCallback? onFlaggedTap;
   final VoidCallback? onOnboardingTap;
@@ -85,86 +87,109 @@ class WorkTrackrDrawer extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            _DrawerItem(
-              icon: Icons.person_outline_rounded,
-              label: 'My Profile',
-              onTap: () {
-                Navigator.pop(context);
-                onProfileTap?.call();
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.devices_rounded,
-              label: 'My Device',
-              onTap: () {
-                Navigator.pop(context);
-                onDeviceTap?.call();
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.cloud_sync_outlined,
-              label: 'Offline Queue',
-              onTap: () {
-                Navigator.pop(context);
-                onOfflineQueueTap?.call();
-              },
-            ),
-            _DrawerItem(
-              icon: Icons.shield_outlined,
-              label: 'Security Settings',
-              onTap: () {
-                Navigator.pop(context);
-                onSecurityTap?.call();
-              },
-            ),
+            // Scrollable middle section — the header above and the
+            // Sign-Out row below stay fixed; everything else scrolls
+            // independently. Fixes a real overflow (confirmed via user
+            // screenshot) that appeared once the Analytics item pushed
+            // total content height past available space on some devices —
+            // Spacer() inside a non-scrolling Column doesn't create scroll
+            // room, it just overflows silently once content doesn't fit.
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _DrawerItem(
+                      icon: Icons.person_outline_rounded,
+                      label: 'My Profile',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onProfileTap?.call();
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.devices_rounded,
+                      label: 'My Device',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onDeviceTap?.call();
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.cloud_sync_outlined,
+                      label: 'Offline Queue',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onOfflineQueueTap?.call();
+                      },
+                    ),
+                    _DrawerItem(
+                      icon: Icons.shield_outlined,
+                      label: 'Security Settings',
+                      onTap: () {
+                        Navigator.pop(context);
+                        onSecurityTap?.call();
+                      },
+                    ),
 
-            if (isHrAdmin) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                child: Text(
-                  'HR ADMIN',
-                  style: AppTextStyles.labelXs.copyWith(
-                    color: cs.onPrimaryContainer,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w700,
-                  ),
+                    if (isHrAdmin) ...[
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        child: Text(
+                          'HR ADMIN',
+                          style: AppTextStyles.labelXs.copyWith(
+                            color: cs.onPrimaryContainer,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      _DrawerItem(
+                        icon: Icons.query_stats_rounded,
+                        label: 'Analytics',
+                        onTap: () {
+                          Navigator.pop(context);
+                          onAnalyticsTap?.call();
+                        },
+                      ),
+                      _DrawerItem(
+                        icon: Icons.people_outline_rounded,
+                        label: 'People & Employees',
+                        onTap: () {
+                          Navigator.pop(context);
+                          onEmployeesTap?.call();
+                        },
+                      ),
+                      _DrawerItem(
+                        icon: Icons.flag_outlined,
+                        label: 'Flagged Records',
+                        onTap: () {
+                          Navigator.pop(context);
+                          onFlaggedTap?.call();
+                        },
+                      ),
+                      _DrawerItem(
+                        icon: Icons.mark_email_unread_outlined,
+                        label: 'Onboarding',
+                        onTap: () {
+                          Navigator.pop(context);
+                          onOnboardingTap?.call();
+                        },
+                      ),
+                      _DrawerItem(
+                        icon: Icons.business_outlined,
+                        label: 'Company Info',
+                        onTap: () {
+                          Navigator.pop(context);
+                          onCompanyTap?.call();
+                        },
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                  ],
                 ),
               ),
-              _DrawerItem(
-                icon: Icons.people_outline_rounded,
-                label: 'People & Employees',
-                onTap: () {
-                  Navigator.pop(context);
-                  onEmployeesTap?.call();
-                },
-              ),
-              _DrawerItem(
-                icon: Icons.flag_outlined,
-                label: 'Flagged Records',
-                onTap: () {
-                  Navigator.pop(context);
-                  onFlaggedTap?.call();
-                },
-              ),
-              _DrawerItem(
-                icon: Icons.mark_email_unread_outlined,
-                label: 'Onboarding',
-                onTap: () {
-                  Navigator.pop(context);
-                  onOnboardingTap?.call();
-                },
-              ),
-              _DrawerItem(
-                icon: Icons.business_outlined,
-                label: 'Company Info',
-                onTap: () {
-                  Navigator.pop(context);
-                  onCompanyTap?.call();
-                },
-              ),
-              const SizedBox(height: 4),
-            ],
-            const Spacer(),
+            ),
             Divider(color: cs.outlineVariant),
 
             _DrawerItem(

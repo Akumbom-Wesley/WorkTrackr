@@ -305,21 +305,29 @@ class _CheckInScreenState extends State<CheckInScreen>
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const Spacer(),
-              _buildStepIcon(),
-              const SizedBox(height: 32),
-              _buildStepTitle(),
-              const SizedBox(height: 12),
-              _buildStepSubtitle(),
-              const Spacer(),
-              _buildStepList(),
-              const SizedBox(height: 48),
-            ],
-          ),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    _buildStepIcon(),
+                    const SizedBox(height: 32),
+                    _buildStepTitle(),
+                    const SizedBox(height: 12),
+                    _buildStepSubtitle(),
+                    const Spacer(),
+                    _buildStepList(),
+                    const SizedBox(height: 48),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

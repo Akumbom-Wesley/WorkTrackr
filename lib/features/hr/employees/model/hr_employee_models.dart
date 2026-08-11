@@ -21,14 +21,14 @@ class HrEmployee {
 
   factory HrEmployee.fromJson(Map<String, dynamic> json) {
     return HrEmployee(
-      id:                  json['id']                    as int,
-      erpnextEmployeeId:   json['erpnext_employee_id']   as String,
-      fullName:            json['full_name']             as String,
+      id:                  json['id']                    as int? ?? 0,
+      erpnextEmployeeId:   json['erpnext_employee_id']   as String? ?? '',
+      fullName:            json['full_name']             as String? ?? '',
       email:               json['email'] as String? ?? '',
       department:          json['department'] as String? ?? '',
-      isActive:            json['is_active']             as bool,
-      isOnboarded:         json['is_onboarded']          as bool,
-      company:             json['company']               as int,
+      isActive:            json['is_active']             as bool? ?? false,
+      isOnboarded:         json['is_onboarded']          as bool? ?? false,
+      company:             json['company']               as int? ?? 0,
     );
   }
 }
@@ -54,15 +54,15 @@ class HrEmployeeHistory {
 
   factory HrEmployeeHistory.fromJson(Map<String, dynamic> json) {
     return HrEmployeeHistory(
-      erpnextEmployeeId: json['erpnext_employee_id'] as String,
-      fullName:          json['full_name']           as String,
+      erpnextEmployeeId: json['erpnext_employee_id'] as String? ?? '',
+      fullName:          json['full_name']           as String? ?? '',
       dateFrom:          DateTime.parse(json['date_from'] as String),
       dateTo:            DateTime.parse(json['date_to']   as String),
-      totalDaysPresent:  json['total_days_present']  as int,
-      totalHoursWorked:  json['total_hours_worked']  as String,
-      attendance: (json['attendance'] as List<dynamic>)
-          .map((e) => HrAttendanceEntry.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      totalDaysPresent:  json['total_days_present']  as int? ?? 0,
+      totalHoursWorked:  json['total_hours_worked']  as String? ?? '0',
+      attendance: (json['attendance'] as List<dynamic>?)
+          ?.map((e) => HrAttendanceEntry.fromJson(e as Map<String, dynamic>))
+          .toList() ?? [],
     );
   }
 
@@ -102,7 +102,7 @@ class HrAttendanceEntry {
           ? DateTime.parse(json['clock_out'] as String).toLocal()
           : null,
       hoursWorked: json['hours_worked'] as String?,
-      status:      json['status']       as String,
+      status:      json['status'] as String? ?? 'UNKNOWN',
     );
   }
 
@@ -144,19 +144,21 @@ class HrCheckinAudit {
 
   factory HrCheckinAudit.fromJson(Map<String, dynamic> json) {
     return HrCheckinAudit(
-      id:                  json['id']                   as int,
-      biometricResult:     json['biometric_result']     as bool,
-      geofenceResult:      json['geofence_result']      as bool,
-      rssiResult:          json['rssi_result']          as bool,
-      antispoofingResult:  json['antispoofing_result']  as bool,
-      wifiAvailable:       json['wifi_available']       as bool,
-      twoFactorOnly:       json['two_factor_only']      as bool,
-      errorCode:           json['error_code']           as String,
-      finalDecision:       json['final_decision']       as String,
+      id:                  json['id']                   as int? ?? 0,
+      biometricResult:     json['biometric_result']     as bool? ?? false,
+      geofenceResult:      json['geofence_result']      as bool? ?? false,
+      rssiResult:          json['rssi_result']          as bool? ?? false,
+      antispoofingResult:  json['antispoofing_result']  as bool? ?? false,
+      wifiAvailable:       json['wifi_available']       as bool? ?? false,
+      twoFactorOnly:       json['two_factor_only']      as bool? ?? false,
+      errorCode:           json['error_code']           as String? ?? '',
+      finalDecision:       json['final_decision']       as String? ?? '',
       gpsTimestampUsed:    json['gps_timestamp_used'] != null
           ? DateTime.parse(json['gps_timestamp_used'] as String).toLocal()
           : null,
-      createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'] as String).toLocal() 
+          : DateTime.now(),
     );
   }
 }

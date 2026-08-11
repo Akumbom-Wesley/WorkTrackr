@@ -99,11 +99,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (e.type == DioExceptionType.connectionError) {
       return 'No internet connection.';
     }
+
     final statusCode = e.response?.statusCode;
-    if (statusCode == 401) return 'Invalid Employee ID or password.';
-    if (statusCode == 400) return 'Please fill in all fields.';
-    if (statusCode == 500) return 'Server error. Please try again later.';
-    return 'Something went wrong. Please try again.';
+    final data = e.response?.data;
+    final detail = (data is Map ? data['detail'] as String? : null) ?? '';
+
+    switch (statusCode) {
+      case 400:
+        if (detail.isNotEmpty) return detail;
+        return 'Please check your input and try again.';
+      case 401:
+        if (detail.isNotEmpty) return detail;
+        return 'Invalid Employee ID or password.';
+      case 403:
+        if (detail.isNotEmpty) return detail;
+        return 'Your account has been deactivated. Contact HR.';
+      case 404:
+        if (detail.isNotEmpty) return detail;
+        return 'Employee ID not found.';
+      case 429:
+        return 'Too many login attempts. Please wait and try again.';
+      case 500:
+        return 'Server error. Please try again later.';
+      case null:
+        return 'Could not connect to the server.';
+      default:
+        if (detail.isNotEmpty) return detail;
+        return 'Something went wrong. Please try again.';
+    }
   }
 }
 

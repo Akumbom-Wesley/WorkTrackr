@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../shared/widgets/worktrackr_error_view.dart';
 import '../employees/widgets/employee_search_bar.dart';
+import 'model/hr_onboarding_models.dart';
 import 'providers/hr_onboarding_providers.dart';
 import 'widgets/onboarding_employee_row.dart';
 import 'widgets/onboarding_stats_grid.dart';
@@ -19,11 +21,67 @@ import 'widgets/onboarding_stats_grid.dart';
 /// Pagination was also removed — the entries list renders directly inside
 /// the outer scroll view, consistent with how the Employees screen handles
 /// its list, rather than a separate prev/next-paged sub-widget.
-class HrOnboardingScreen extends ConsumerWidget {
+class HrOnboardingScreen extends ConsumerStatefulWidget {
   const HrOnboardingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HrOnboardingScreen> createState() => _HrOnboardingScreenState();
+}
+
+class _HrOnboardingScreenState extends ConsumerState<HrOnboardingScreen> {
+  bool _isSendingBulk = false;
+  final Set<String> _sendingIds = {};
+
+  Future<void> _handleBulkSend() async {
+    if (_isSendingBulk) return;
+    setState(() => _isSendingBulk = true);
+    try {
+      await ref.read(hrOnboardingProvider.notifier).sendBulkEmails();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bulk onboarding emails sent successfully.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send bulk emails: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSendingBulk = false);
+    }
+  }
+
+  Future<void> _handleRowAction(OnboardingEntry entry) async {
+    final id = entry.employee.erpnextEmployeeId;
+    if (_sendingIds.contains(id)) return;
+    
+    setState(() => _sendingIds.add(id));
+    try {
+      if (entry.emailStatus == OnboardingEmailStatus.notSent) {
+        await ref.read(hrOnboardingProvider.notifier).sendEmail(id);
+      } else {
+        await ref.read(hrOnboardingProvider.notifier).resendEmail(id);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Onboarding email sent to ${entry.employee.fullName}.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send email to ${entry.employee.fullName}: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sendingIds.remove(id));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final dataAsync = ref.watch(hrOnboardingProvider);
     final filteredAsync = ref.watch(hrFilteredOnboardingEntriesProvider);
     final cs = Theme.of(context).colorScheme;
@@ -33,6 +91,10 @@ class HrOnboardingScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: cs.primaryContainer,
         foregroundColor: cs.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: Text(
           'Onboarding',
           style: AppTextStyles.headlineMd.copyWith(color: cs.onPrimary),
@@ -53,8 +115,8 @@ class HrOnboardingScreen extends ConsumerWidget {
           onRetry: () => ref.read(hrOnboardingProvider.notifier).refresh(),
         ),
         data: (data) => RefreshIndicator(
-          color: AppColors.secondary,
-          backgroundColor: AppColors.surfaceBase,
+          color: Theme.of(context).colorScheme.secondary,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           onRefresh: () => ref.read(hrOnboardingProvider.notifier).refresh(),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -76,14 +138,18 @@ class HrOnboardingScreen extends ConsumerWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: () => ref
-                      .read(hrOnboardingRepositoryProvider)
-                      .sendAllPendingEmails(),
-                  icon: const Icon(Icons.forward_to_inbox_rounded, size: 18),
-                  label: const Text('Send Emails to All Pending'),
+                  onPressed: _isSendingBulk ? null : _handleBulkSend,
+                  icon: _isSendingBulk
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.forward_to_inbox_rounded, size: 18),
+                  label: Text(_isSendingBulk ? 'Sending...' : 'Send Emails to All Pending'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -155,18 +221,8 @@ class HrOnboardingScreen extends ConsumerWidget {
                       for (final entry in entries) ...[
                         OnboardingEmployeeRow(
                           entry: entry,
-                          onAction: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Action queued for ${entry.employee.fullName} '
-                                  '(stub — not yet wired to backend response '
-                                  'handling)',
-                                ),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          },
+                          isProcessing: _sendingIds.contains(entry.employee.erpnextEmployeeId),
+                          onAction: () => _handleRowAction(entry),
                         ),
                         const SizedBox(height: 8),
                       ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../features/offline/sync/sync_service.dart';
 
 class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
   const WorkTrackrAppBar({
@@ -61,6 +62,16 @@ class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
               color: cs.onSurface,
             ),
           ),
+          const SizedBox(width: 12),
+          // Sync status indicator
+          ValueListenableBuilder<SyncStatus>(
+            valueListenable: SyncService.instance.status,
+            builder: (context, status, child) {
+              if (status == SyncStatus.idle) return const SizedBox.shrink();
+              
+              return _SyncIndicator(status: status);
+            },
+          ),
         ],
       ),
       actions: actions ??
@@ -79,6 +90,105 @@ class WorkTrackrAppBar extends StatelessWidget implements PreferredSizeWidget {
         preferredSize: const Size.fromHeight(1),
         child: Divider(height: 1, color: cs.outlineVariant),
       ),
+    );
+  }
+}
+
+class _SyncIndicator extends StatelessWidget {
+  const _SyncIndicator({required this.status});
+  final SyncStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    IconData icon;
+    Color color;
+    bool rotate = false;
+
+    switch (status) {
+      case SyncStatus.syncing:
+        icon = Icons.sync_rounded;
+        color = cs.primary;
+        rotate = true;
+        break;
+      case SyncStatus.success:
+        icon = Icons.cloud_done_rounded;
+        color = Colors.green;
+        break;
+      case SyncStatus.failed:
+        icon = Icons.cloud_off_rounded;
+        color = cs.error;
+        break;
+      case SyncStatus.idle:
+        return const SizedBox.shrink();
+    }
+
+    Widget iconWidget = Icon(icon, size: 16, color: color);
+
+    if (rotate) {
+      iconWidget = _RotatingWidget(child: iconWidget);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          iconWidget,
+          if (status == SyncStatus.syncing) ...[
+            const SizedBox(width: 6),
+            Text(
+              'Syncing...',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ]
+        ],
+      ),
+    );
+  }
+}
+
+class _RotatingWidget extends StatefulWidget {
+  const _RotatingWidget({required this.child});
+  final Widget child;
+
+  @override
+  State<_RotatingWidget> createState() => _RotatingWidgetState();
+}
+
+class _RotatingWidgetState extends State<_RotatingWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: _controller,
+      child: widget.child,
     );
   }
 }

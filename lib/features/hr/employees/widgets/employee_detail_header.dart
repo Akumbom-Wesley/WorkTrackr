@@ -5,17 +5,9 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../model/hr_employee_models.dart';
 
 /// Expanded SliverAppBar background for the employee detail screen:
-/// avatar initials, ID, and active/onboarded status chips.
-///
-/// The employee's full name previously lived here as a large Text widget,
-/// duplicating it (the collapsed SliverAppBar had no title at all, so the
-/// name only appeared in this expanded block — meaning the bar showed
-/// nothing but a bare back arrow once collapsed, inconsistent with every
-/// other HR screen's AppBar, which always shows a static title). Fixed by
-/// moving the name to the SliverAppBar's `title` at the call site (always
-/// visible, pinned, matches the Onboarding/Employees screens' bar
-/// pattern) and removing the duplicate name from this block — it now only
-/// holds the avatar and the ID/status row.
+/// large centered avatar with initials, name, department, and status chips.
+/// Designed to feel premium and spacious — the avatar is prominent and
+/// the chips use soft pill styling with subtle translucent backgrounds.
 class EmployeeDetailHeader extends StatelessWidget {
   const EmployeeDetailHeader({super.key, required this.employee});
   final HrEmployee employee;
@@ -30,60 +22,73 @@ class EmployeeDetailHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
-      color: cs.primaryContainer,
-      padding: const EdgeInsets.fromLTRB(20, kToolbarHeight + 4, 20, 14),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      color: Colors.transparent,
+      // Add 48px to the bottom padding to clear the TabBar
+      padding: const EdgeInsets.fromLTRB(20, kToolbarHeight + 16, 20, 14 + 48),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          // ── Avatar ──────────────────────────────────────────────────
           Container(
-            width: 48,
-            height: 48,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               color: cs.onPrimary.withValues(alpha: 0.15),
               shape: BoxShape.circle,
+              border: Border.all(
+                color: cs.onPrimary.withValues(alpha: 0.25),
+                width: 2,
+              ),
             ),
             child: Center(
               child: Text(
                 _initials,
-                style: AppTextStyles.bodyLg.copyWith(
+                style: AppTextStyles.headlineMd.copyWith(
                   color: cs.onPrimary,
                   fontWeight: FontWeight.w700,
+                  fontSize: 22,
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  employee.erpnextEmployeeId,
-                  style: AppTextStyles.labelSm.copyWith(
-                    color: cs.onPrimary.withValues(alpha: 0.75),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    _HeaderChip(
-                      label: employee.isActive ? 'Active' : 'Inactive',
-                      color: employee.isActive
-                          ? AppColors.securitySuccess
-                          : AppColors.securityError,
-                    ),
-                    if (!employee.isOnboarded) ...[
-                      const SizedBox(width: 6),
-                      _HeaderChip(
-                        label: 'Not Onboarded',
-                        color: AppColors.securityWarning,
-                      ),
-                    ],
-                  ],
+          const SizedBox(height: 10),
+
+          // ── Employee ID ─────────────────────────────────────────────
+          Text(
+            employee.erpnextEmployeeId,
+            style: AppTextStyles.labelSm.copyWith(
+              color: cs.onPrimary.withValues(alpha: 0.7),
+            ),
+          ),
+          if (employee.department.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              employee.department,
+              style: AppTextStyles.labelSm.copyWith(
+                color: cs.onPrimary.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+
+          // ── Status chips ────────────────────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _HeaderChip(
+                label: employee.isActive ? 'Active' : 'Inactive',
+                color: employee.isActive
+                    ? AppColors.securitySuccess
+                    : AppColors.securityError,
+              ),
+              if (!employee.isOnboarded) ...[
+                const SizedBox(width: 8),
+                _HeaderChip(
+                  label: 'Not Onboarded',
+                  color: AppColors.securityWarning,
                 ),
               ],
-            ),
+            ],
           ),
         ],
       ),
@@ -99,10 +104,11 @@ class _HeaderChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,

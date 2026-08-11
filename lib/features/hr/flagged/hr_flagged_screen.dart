@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../shared/widgets/worktrackr_empty_state.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -21,6 +23,10 @@ class HrFlaggedScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: cs.primaryContainer,
         foregroundColor: cs.onPrimary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: Text(
           'Flagged Records',
           style: AppTextStyles.headlineMd.copyWith(color: cs.onPrimary),
@@ -87,8 +93,8 @@ class HrFlaggedTabView extends ConsumerWidget {
               data: (records) => records.isEmpty
                   ? const _Empty()
                   : RefreshIndicator(
-                      color: AppColors.secondary,
-                      backgroundColor: AppColors.surfaceBase,
+                      color: Theme.of(context).colorScheme.secondary,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
                       onRefresh: () =>
                           ref.read(hrFlaggedProvider.notifier).refresh(),
                       child: ListView.separated(
@@ -320,31 +326,10 @@ class _Empty extends StatelessWidget {
   const _Empty();
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: AppColors.securitySuccess.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.check_circle_outline_rounded,
-                size: 36, color: AppColors.securitySuccess),
-          ),
-          const SizedBox(height: 16),
-          Text('All clear!',
-              style: AppTextStyles.headlineMd
-                  .copyWith(color: cs.onSurface)),
-          const SizedBox(height: 6),
-          Text('No flagged records to review.',
-              style: AppTextStyles.bodyMd
-                  .copyWith(color: cs.onSurfaceVariant)),
-        ],
-      ),
+    return const WorkTrackrEmptyState(
+      title: 'All Good',
+      message: 'No flagged activities found for this criteria.',
+      icon: Icons.check_circle_outline_rounded,
     );
   }
 }

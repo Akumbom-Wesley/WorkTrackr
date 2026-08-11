@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../shared/widgets/worktrackr_empty_state.dart';
 import '../dashboard/widgets/dashboard_error_view.dart';
 import 'model/history_models.dart';
 import 'providers/history_providers.dart';
@@ -385,39 +387,10 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.event_busy_rounded,
-              size: 36,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No records found',
-            style: AppTextStyles.headlineMd.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'No attendance records for this period.',
-            style: AppTextStyles.bodyMd.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
+    return const WorkTrackrEmptyState(
+      title: 'No records found',
+      message: 'No attendance records for this period.',
+      icon: Icons.event_busy_rounded,
     );
   }
 }

@@ -24,11 +24,10 @@ class _HoursSummaryGridState extends State<HoursSummaryGrid> {
   late Timer _timer;
   late Duration _elapsed;
 
-  bool get _isClockedIn =>
-      widget.status.status == 'present' ||
-      widget.status.status == 'break' ||
-      widget.status.status == 'errand' ||
-      widget.status.status == 'assignment';
+  bool get _isClockedIn {
+    final s = widget.status.status?.toLowerCase();
+    return s == 'present' || s == 'break' || s == 'errand' || s == 'assignment';
+  }
 
   @override
   void initState() {
@@ -158,6 +157,8 @@ class _StatCard extends StatelessWidget {
                 style: AppTextStyles.headlineMd.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
               Text(
@@ -165,6 +166,8 @@ class _StatCard extends StatelessWidget {
                 style: AppTextStyles.labelXs.copyWith(
                   color: cs.onSurfaceVariant,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

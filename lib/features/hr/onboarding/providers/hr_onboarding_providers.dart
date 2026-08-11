@@ -73,6 +73,18 @@ class HrOnboardingNotifier extends AsyncNotifier<HrOnboardingData> {
     state = const AsyncLoading();
     state = await AsyncValue.guard(_load);
   }
+
+  Future<void> sendEmail(String erpnextEmployeeId) async {
+    await ref.read(hrOnboardingRepositoryProvider).sendOnboardingEmail(erpnextEmployeeId);
+  }
+
+  Future<void> resendEmail(String erpnextEmployeeId) async {
+    await ref.read(hrOnboardingRepositoryProvider).resendOnboardingEmail(erpnextEmployeeId);
+  }
+
+  Future<void> sendBulkEmails() async {
+    await ref.read(hrOnboardingRepositoryProvider).sendAllPendingEmails();
+  }
 }
 
 final hrOnboardingProvider =

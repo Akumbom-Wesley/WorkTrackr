@@ -2,9 +2,9 @@ class AppConstants {
   AppConstants._();
 
   // API
-  static const String baseUrl        =  'http://192.168.0.244:8000/api/v1'; //'https://attendance-backend-ktpa.onrender.com/api/v1';
-  static const int connectTimeout    = 10000; // ms
-  static const int receiveTimeout    = 10000;
+  static const String baseUrl        = 'https://api.tarh.work/api/v1';
+  static const int connectTimeout    = 60000; // ms
+  static const int receiveTimeout    = 60000;
 
   // JWT storage keys
   static const String accessTokenKey  = 'access_token';

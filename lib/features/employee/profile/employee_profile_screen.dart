@@ -6,7 +6,9 @@ import '../../auth/auth_provider.dart';
 import '../dashboard/providers/dashboard_providers.dart';
 
 class EmployeeProfileScreen extends ConsumerWidget {
-  const EmployeeProfileScreen({super.key});
+  const EmployeeProfileScreen({super.key, this.isStandalone = false});
+
+  final bool isStandalone;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,6 +18,14 @@ class EmployeeProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: isStandalone
+          ? AppBar(
+              title: const Text('My Profile'),
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              elevation: 0,
+            )
+          : null,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
         children: [

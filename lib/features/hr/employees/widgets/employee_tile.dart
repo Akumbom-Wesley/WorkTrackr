@@ -48,14 +48,14 @@ class EmployeeTile extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: AppColors.secondary.withValues(alpha: 0.12),
+                      color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
                       child: Text(
                         _initials,
                         style: AppTextStyles.bodyMd.copyWith(
-                          color: AppColors.secondary,
+                          color: Theme.of(context).colorScheme.secondary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -144,7 +144,7 @@ class _StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color =
-        active ? AppColors.securitySuccess : AppColors.onSurfaceVariant;
+        active ? AppColors.securitySuccess : Theme.of(context).colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(

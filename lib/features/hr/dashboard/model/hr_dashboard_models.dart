@@ -19,12 +19,19 @@ class HrDashboardStats {
     Map<String, dynamic> json, {
     bool isFromCache = false,
   }) {
+    int parseInt(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+
     return HrDashboardStats(
-      presentToday:          json['present_today']          as int,
-      absentToday:           json['absent_today']           as int,
-      flaggedPending:        json['flagged_pending']        as int,
-      notOnboarded:          json['not_onboarded']          as int,
-      totalActiveEmployees:  json['total_active_employees'] as int,
+      presentToday:          parseInt(json['present_today']),
+      absentToday:           parseInt(json['absent_today']),
+      flaggedPending:        parseInt(json['flagged_pending']),
+      notOnboarded:          parseInt(json['not_onboarded']),
+      totalActiveEmployees:  parseInt(json['total_active_employees']),
       isFromCache: isFromCache,
     );
   }

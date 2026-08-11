@@ -19,11 +19,15 @@ class HrOnboardingRepository {
   // Endpoints exist on the backend per user confirmation; wiring these
   // up correctly (request/response shape) is a follow-up task. For now
   // these hit placeholder paths so the UI has something real to call.
-  Future<void> sendOnboardingEmail(int employeeId) async {
-    await _dio.post('/employees/$employeeId/send-onboarding-email/');
+  Future<void> sendOnboardingEmail(String erpnextEmployeeId) async {
+    await _dio.post('/onboarding/trigger/$erpnextEmployeeId/');
+  }
+
+  Future<void> resendOnboardingEmail(String erpnextEmployeeId) async {
+    await _dio.post('/onboarding/resend/$erpnextEmployeeId/');
   }
 
   Future<void> sendAllPendingEmails() async {
-    await _dio.post('/employees/send-onboarding-emails/');
+    await _dio.post('/onboarding/trigger/bulk/');
   }
 }

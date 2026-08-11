@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_text_styles.dart';
@@ -50,6 +51,10 @@ class _HrEmployeeDetailScreenState extends ConsumerState<HrEmployeeDetailScreen>
         appBar: AppBar(
           backgroundColor: cs.primaryContainer,
           foregroundColor: cs.onPrimary,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
         ),
         body: WorkTrackrErrorView(
           title: 'Could not load employee details',
@@ -90,11 +95,15 @@ class _DetailScaffold extends StatelessWidget {
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverAppBar(
-            expandedHeight: 168,
+            expandedHeight: 290,
             pinned: true,
             centerTitle: true,
             backgroundColor: cs.primaryContainer,
             foregroundColor: cs.onPrimary,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.pop(),
+            ),
             title: Text(
               data.employee.fullName,
               style: AppTextStyles.headlineMd.copyWith(color: cs.onPrimary),
@@ -145,16 +154,34 @@ class _DetailShimmer extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          Container(height: 200, color: base),
+          Container(height: 260, color: base),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Container(height: 20, color: base),
+                Container(
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: base,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 const SizedBox(height: 12),
-                Container(height: 60, color: base),
+                Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: base,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
                 const SizedBox(height: 12),
-                Container(height: 60, color: base),
+                Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: base,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
               ],
             ),
           ),

@@ -16,10 +16,12 @@ class OnboardingEmployeeRow extends StatelessWidget {
     super.key,
     required this.entry,
     required this.onAction,
+    this.isProcessing = false,
   });
 
   final OnboardingEntry entry;
   final VoidCallback onAction;
+  final bool isProcessing;
 
   String get _initials {
     final trimmed = entry.employee.fullName.trim();
@@ -27,7 +29,7 @@ class OnboardingEmployeeRow extends StatelessWidget {
     return trimmed.split(' ').map((w) => w[0]).take(2).join().toUpperCase();
   }
 
-  _StatusVisual get _visual {
+  _StatusVisual _visual(BuildContext context) {
     switch (entry.emailStatus) {
       case OnboardingEmailStatus.notSent:
         return const _StatusVisual(
@@ -37,9 +39,9 @@ class OnboardingEmployeeRow extends StatelessWidget {
           actionTooltip: 'Send Email',
         );
       case OnboardingEmailStatus.invitedExpired:
-        return const _StatusVisual(
+        return _StatusVisual(
           label: 'Expired',
-          color: AppColors.onSurfaceVariant,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           actionIcon: Icons.refresh_rounded,
           actionTooltip: 'Resend Invitation',
         );
@@ -56,7 +58,7 @@ class OnboardingEmployeeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final visual = _visual;
+    final visual = _visual(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -71,14 +73,14 @@ class OnboardingEmployeeRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.secondary.withValues(alpha: 0.12),
+              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Center(
               child: Text(
                 _initials,
                 style: AppTextStyles.labelSm.copyWith(
-                  color: AppColors.secondary,
+                  color: Theme.of(context).colorScheme.secondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -124,13 +126,22 @@ class OnboardingEmployeeRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          IconButton(
-            icon: Icon(visual.actionIcon, size: 19),
-            color: AppColors.secondary,
-            tooltip: visual.actionTooltip,
-            visualDensity: VisualDensity.compact,
-            onPressed: onAction,
-          ),
+          isProcessing
+              ? const SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : IconButton(
+                  icon: Icon(visual.actionIcon, size: 19),
+                  color: Theme.of(context).colorScheme.secondary,
+                  tooltip: visual.actionTooltip,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onAction,
+                ),
         ],
       ),
     );

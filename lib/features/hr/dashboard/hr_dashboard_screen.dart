@@ -31,7 +31,9 @@ class HrDashboardScreen extends ConsumerWidget {
       fullName: user?.fullName,
       employeeId: user?.erpnextEmployeeId,
       isHrAdmin: true,
+      onProfileTap: () => context.push(AppRoutes.profile),
       onOfflineQueueTap: () => context.push(AppRoutes.offlineQueue),
+      onAnalyticsTap: () => context.push(AppRoutes.hrAnalytics),
       onEmployeesTap: () => context.push(AppRoutes.hrEmployees),
       onFlaggedTap: () => context.push(AppRoutes.hrFlagged),
       onOnboardingTap: () => context.push(AppRoutes.hrOnboarding),
@@ -48,8 +50,8 @@ class HrDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.dashboard_rounded),
           title: 'Dashboard',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       PersistentTabConfig(
@@ -57,8 +59,8 @@ class HrDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.history_rounded),
           title: 'History',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       PersistentTabConfig(
@@ -66,8 +68,8 @@ class HrDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.flag_rounded),
           title: 'Records',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       PersistentTabConfig(
@@ -75,8 +77,8 @@ class HrDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.bar_chart_rounded),
           title: 'Reports',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     ];
@@ -135,8 +137,8 @@ class _HrDashboardBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return RefreshIndicator(
-      color: AppColors.secondary,
-      backgroundColor: AppColors.surfaceBase,
+      color: Theme.of(context).colorScheme.secondary,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       onRefresh: () => ref.read(hrDashboardProvider.notifier).refresh(),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -205,14 +207,7 @@ class _HrGreetingCardState extends ConsumerState<_HrGreetingCard> {
       width: double.infinity,
       decoration: BoxDecoration(
         color: cs.primaryContainer,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -272,7 +267,7 @@ class _HrGreetingCardState extends ConsumerState<_HrGreetingCard> {
                 _HrChip(
                   icon: Icons.admin_panel_settings_rounded,
                   label: 'Admin Access',
-                  color: AppColors.secondary,
+                  color: Theme.of(context).colorScheme.secondary,
                 ),
               ],
             ),
@@ -415,7 +410,7 @@ class _StatsGrid extends StatelessWidget {
               label: 'Not Onboarded',
               value: stats.notOnboarded,
               icon: Icons.person_add_disabled_outlined,
-              color: AppColors.onPrimaryContainer,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
               routePath: AppRoutes.hrOnboarding,
             ),
           ],
@@ -477,12 +472,16 @@ class _StatCard extends StatelessWidget {
                         color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 22,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       label,
                       style: AppTextStyles.labelXs.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -545,37 +544,40 @@ class _HrDashboardShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final base = Theme.of(context).dividerColor.withValues(alpha: 0.15);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _ShimmerBox(height: 220, color: base),
-          const SizedBox(height: 24),
-          _ShimmerBox(width: 120, height: 14, color: base),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(child: _ShimmerBox(height: 80, color: base)),
-            const SizedBox(width: 12),
-            Expanded(child: _ShimmerBox(height: 80, color: base)),
-          ]),
-          const SizedBox(height: 12),
-          Row(children: [
-            Expanded(child: _ShimmerBox(height: 80, color: base)),
-            const SizedBox(width: 12),
-            Expanded(child: _ShimmerBox(height: 80, color: base)),
-          ]),
-          const SizedBox(height: 12),
-          _ShimmerBox(height: 52, color: base),
-          const SizedBox(height: 20),
-          _ShimmerBox(width: 140, height: 14, color: base),
-          const SizedBox(height: 12),
-          _ShimmerBox(height: 140, color: base),
-          const SizedBox(height: 20),
-          _ShimmerBox(width: 120, height: 14, color: base),
-          const SizedBox(height: 12),
-          _ShimmerBox(height: 240, color: base),
-        ],
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ShimmerBox(height: 220, color: base),
+            const SizedBox(height: 24),
+            _ShimmerBox(width: 120, height: 14, color: base),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: _ShimmerBox(height: 80, color: base)),
+              const SizedBox(width: 12),
+              Expanded(child: _ShimmerBox(height: 80, color: base)),
+            ]),
+            const SizedBox(height: 12),
+            Row(children: [
+              Expanded(child: _ShimmerBox(height: 80, color: base)),
+              const SizedBox(width: 12),
+              Expanded(child: _ShimmerBox(height: 80, color: base)),
+            ]),
+            const SizedBox(height: 12),
+            _ShimmerBox(height: 52, color: base),
+            const SizedBox(height: 20),
+            _ShimmerBox(width: 140, height: 14, color: base),
+            const SizedBox(height: 12),
+            _ShimmerBox(height: 140, color: base),
+            const SizedBox(height: 20),
+            _ShimmerBox(width: 120, height: 14, color: base),
+            const SizedBox(height: 12),
+            _ShimmerBox(height: 240, color: base),
+          ],
+        ),
       ),
     );
   }

@@ -32,6 +32,7 @@ class EmployeeDashboardScreen extends ConsumerWidget {
           ? (data.me.fullName.isNotEmpty ? data.me.fullName : data.me.username)
           : null,
       employeeId: data?.me.erpnextEmployeeId,
+      onProfileTap: () => context.push(AppRoutes.profile),
       onOfflineQueueTap: () => context.push(AppRoutes.offlineQueue),
       onLogoutTap: () async {
         await ref.read(authProvider.notifier).logout();
@@ -45,8 +46,8 @@ class EmployeeDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.dashboard_rounded),
           title: 'Dashboard',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       PersistentTabConfig(
@@ -54,8 +55,8 @@ class EmployeeDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.history_rounded),
           title: 'History',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       PersistentTabConfig(
@@ -63,8 +64,8 @@ class EmployeeDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.cloud_sync_outlined),
           title: 'Queue',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
       PersistentTabConfig(
@@ -72,8 +73,8 @@ class EmployeeDashboardScreen extends ConsumerWidget {
         item: ItemConfig(
           icon: const Icon(Icons.person_rounded),
           title: 'Profile',
-          activeForegroundColor: AppColors.secondary,
-          inactiveForegroundColor: AppColors.onSurfaceVariant,
+          activeForegroundColor: Theme.of(context).colorScheme.secondary,
+          inactiveForegroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     ];
@@ -98,8 +99,8 @@ class _DashboardTab extends ConsumerWidget {
         onRetry: () => ref.read(dashboardProvider.notifier).refresh(),
       ),
       data: (data) => RefreshIndicator(
-        color: AppColors.secondary,
-        backgroundColor: AppColors.surfaceBase,
+        color: Theme.of(context).colorScheme.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),

@@ -43,11 +43,10 @@ class _GreetingCardState extends State<GreetingCard> {
     super.dispose();
   }
 
-  bool get _isCurrentlyIn =>
-      widget.status.status == 'present' ||
-      widget.status.status == 'break' ||
-      widget.status.status == 'errand' ||
-      widget.status.status == 'assignment';
+  bool get _isCurrentlyIn {
+    final s = widget.status.status?.toLowerCase();
+    return s == 'present' || s == 'break' || s == 'errand' || s == 'assignment';
+  }
 
   bool get _hasCheckedInToday => widget.todaySummary.clockIn != null;
 
@@ -59,13 +58,6 @@ class _GreetingCardState extends State<GreetingCard> {
       decoration: BoxDecoration(
         color: cs.primaryContainer,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

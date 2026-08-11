@@ -16,7 +16,7 @@ class OnboardingStatsGrid extends StatelessWidget {
           child: _StatTile(
             label: 'Onboarded',
             value: '${stats.totalOnboarded}',
-            valueColor: AppColors.secondary,
+            valueColor: Theme.of(context).colorScheme.secondary,
           ),
         ),
         const SizedBox(width: 10),
